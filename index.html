@@ -307,7 +307,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',syste
       <div class="ct">CÁLCULO DE AHORRO</div>
       <div class="arow"><span class="albl">Disponible (tras ahorro)</span><span class="aval" style="color:var(--text)" id="ah-disp">S/ 0</span></div>
       <div class="arow"><span class="albl" id="ah-pct-lbl">20% a ahorro</span><span class="aval" style="color:var(--amber)" id="ah-calc">S/ 0</span></div>
-      <div class="arow"><span class="albl">Aporte extra</span><span class="aval" style="color:var(--green)" id="ah-ext">S/ 0</span></div>
+      <div class="arow"><span class="albl">Aportes extra</span><span class="aval" style="color:var(--green)" id="ah-ext">S/ 0</span></div>
       <div class="atotal"><span class="atl">Total ahorro</span><span class="atv" id="ah-total">S/ 0</span></div>
     </div>
 
@@ -413,25 +413,21 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',syste
       <div class="dth"><div class="dth-dot" style="background:var(--green)"></div><span class="dth-lbl">Ahorro y config.</span></div>
       <div class="drow"><span class="drow-lbl">Presupuesto mensual</span><input class="drow-inp ci" id="cfg-pres" type="number" placeholder="0" oninput="recalc()"></div>
       <div class="drow"><span class="drow-lbl">% del remanente a ahorrar</span><input class="drow-inp ca" id="cfg-pct" type="number" placeholder="20" min="0" max="100" oninput="recalc()"></div>
-      <div class="drow"><span class="drow-lbl">Aporte extra este mes</span><input class="drow-inp cg" id="cfg-ext" type="number" placeholder="0" oninput="recalc()"></div>
-      <div class="drow"><span class="drow-lbl">Retiro de ahorros (para un pago)</span><input class="drow-inp cg" id="cfg-retiro" type="number" placeholder="0" min="0" oninput="recalc()"></div>
-      <div class="drow"><span class="drow-lbl">Ahorro extra acumulado</span><input class="drow-inp cg" id="cfg-extraacum" type="number" placeholder="0" oninput="recalc()"></div>
-      <div style="padding:10px 12px;border-top:1px solid var(--border)">
-        <div style="font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--muted2);text-transform:uppercase;margin-bottom:8px">Metas de ahorro</div>
-        <div style="display:flex;flex-direction:column;gap:5px">
-          <div style="display:flex;gap:5px">
-            <input class="md-inp" id="m1-n" type="text" placeholder="Meta 1 — nombre" oninput="recalc()" style="flex:1">
-            <input class="md-inp" id="m1-v" type="number" placeholder="S/" oninput="recalc()" style="width:72px;text-align:right;color:var(--blue)">
-          </div>
-          <div style="display:flex;gap:5px">
-            <input class="md-inp" id="m2-n" type="text" placeholder="Meta 2 — nombre" oninput="recalc()" style="flex:1">
-            <input class="md-inp" id="m2-v" type="number" placeholder="S/" oninput="recalc()" style="width:72px;text-align:right;color:var(--blue)">
-          </div>
-          <div style="display:flex;gap:5px">
-            <input class="md-inp" id="m3-n" type="text" placeholder="Meta 3 — nombre" oninput="recalc()" style="flex:1">
-            <input class="md-inp" id="m3-v" type="number" placeholder="S/" oninput="recalc()" style="width:72px;text-align:right;color:var(--blue)">
-          </div>
-        </div>
+      <div style="padding:8px 12px 4px;border-top:1px solid var(--border)">
+        <div style="font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--muted2);text-transform:uppercase;margin-bottom:8px">Aportes extra al ahorro</div>
+        <div id="aex-list" style="display:flex;flex-direction:column;gap:5px"></div>
+        <button class="btn-add" style="margin-top:6px;width:100%" onclick="addAex()">+ Añadir aporte</button>
+      </div>
+      <div style="padding:8px 12px 4px;border-top:1px solid var(--border)">
+        <div style="font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--muted2);text-transform:uppercase;margin-bottom:8px">Retiro de ahorros</div>
+        <div id="ret-list" style="display:flex;flex-direction:column;gap:5px"></div>
+        <button class="btn-add" style="margin-top:6px;width:100%" onclick="addRet()">+ Añadir retiro</button>
+      </div>
+      <div style="padding:8px 12px;border-top:1px solid var(--border)">
+        <div style="font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--muted2);text-transform:uppercase;margin-bottom:6px">Metas de ahorro</div>
+        <div style="font-size:9px;color:var(--muted);margin-bottom:8px">Nombre · Nº de orden · monto. Se llenan en el orden que pongas (1 primero).</div>
+        <div id="metas-list" style="display:flex;flex-direction:column;gap:5px"></div>
+        <button class="btn-add" style="margin-top:6px;width:100%" onclick="addMeta()">+ Añadir meta</button>
       </div>
     </div>
 
@@ -521,7 +517,8 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',syste
 const MN=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const HX_D=['#3dd68c','#5b8dee','#f5a623','#f06a6a','#7c6ff7'];
 const LBS_D=['Disponible','Fijos','Variables','Deudas','Ahorro'];
-let curM=5, curY='2025';
+const _now=new Date();
+let curM=_now.getMonth(), curY=String(_now.getFullYear());
 let _cBar=null, _cAho=null, _cDonut=null, _cDonutA=null;
 let mdRows=[];
 const cnts={ing:0,fij:0,var:0,deu:0};
@@ -562,6 +559,86 @@ function removeRow(rid){
   if(el) el.remove();
   recalc();
 }
+
+/* ── APORTES EXTRA AL AHORRO (lista con +añadir) ── */
+let aexCnt=0;
+function addAex(lbl='',val=''){
+  const list=$('aex-list'); if(!list) return;
+  const id='aex-'+(aexCnt++);
+  const div=document.createElement('div');
+  div.className='aex-row'; div.id='row-'+id;
+  div.style.cssText='display:flex;gap:5px;align-items:center';
+  div.innerHTML=`
+    <input style="flex:1;min-width:0;background:var(--input-bg);border:1px solid var(--border);border-radius:4px;color:var(--muted2);font-size:10px;font-family:inherit;padding:3px 6px"
+      id="lbl-${id}" type="text" placeholder="Concepto (ej. bono)" value="${lbl}" oninput="recalc()">
+    <input class="drow-inp cg" id="val-${id}" type="number" placeholder="0" value="${val}" oninput="recalc()" style="width:72px">
+    <button onclick="removeAex('${id}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:0 2px;flex-shrink:0">×</button>`;
+  list.appendChild(div);
+  recalc();
+}
+function removeAex(id){ const el=$('row-'+id); if(el) el.remove(); recalc(); }
+function sumAex(){ let t=0; document.querySelectorAll('[id^="val-aex-"]').forEach(el=>t+=parseFloat(el.value)||0); return t; }
+function getAexData(){
+  const rows=[];
+  document.querySelectorAll('#aex-list .aex-row').forEach(el=>{
+    const id=el.id.replace('row-','');
+    rows.push({lbl:$('lbl-'+id)?.value||'',val:parseFloat($('val-'+id)?.value)||0});
+  });
+  return rows;
+}
+
+/* ── RETIROS DE AHORRO (lista con +añadir) ── */
+let retCnt=0;
+function addRet(lbl='',val=''){
+  const list=$('ret-list'); if(!list) return;
+  const id='ret-'+(retCnt++);
+  const div=document.createElement('div');
+  div.className='ret-row'; div.id='row-'+id;
+  div.style.cssText='display:flex;gap:5px;align-items:center';
+  div.innerHTML=`
+    <input style="flex:1;min-width:0;background:var(--input-bg);border:1px solid var(--border);border-radius:4px;color:var(--muted2);font-size:10px;font-family:inherit;padding:3px 6px"
+      id="lbl-${id}" type="text" placeholder="Concepto (ej. pago deuda)" value="${lbl}" oninput="recalc()">
+    <input class="drow-inp cg" id="val-${id}" type="number" placeholder="0" value="${val}" oninput="recalc()" style="width:72px">
+    <button onclick="removeRet('${id}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:0 2px;flex-shrink:0">×</button>`;
+  list.appendChild(div);
+  recalc();
+}
+function removeRet(id){ const el=$('row-'+id); if(el) el.remove(); recalc(); }
+function sumRet(){ let t=0; document.querySelectorAll('[id^="val-ret-"]').forEach(el=>t+=parseFloat(el.value)||0); return t; }
+function getRetData(){
+  const rows=[];
+  document.querySelectorAll('#ret-list .ret-row').forEach(el=>{
+    const id=el.id.replace('row-','');
+    rows.push({lbl:$('lbl-'+id)?.value||'',val:parseFloat($('val-'+id)?.value)||0});
+  });
+  return rows;
+}
+
+/* ── METAS DE AHORRO (lista con +añadir) ── */
+let metaCnt=0;
+function addMeta(n='',v='',p=''){
+  const list=$('metas-list'); if(!list) return;
+  const id='meta-'+(metaCnt++);
+  const div=document.createElement('div');
+  div.className='meta-row'; div.id='row-'+id;
+  div.style.cssText='display:flex;gap:5px;align-items:center';
+  div.innerHTML=`
+    <input class="md-inp" id="mn-${id}" type="text" placeholder="Nombre de la meta" value="${n}" oninput="recalc()" style="flex:1">
+    <input class="md-inp" id="mp-${id}" type="number" min="1" placeholder="Nº" value="${p}" oninput="recalc()" style="width:40px;text-align:center;color:var(--purple)" title="Orden / prioridad (1 = primera)">
+    <input class="md-inp" id="mv-${id}" type="number" placeholder="S/" value="${v}" oninput="recalc()" style="width:66px;text-align:right;color:var(--blue)">
+    <button onclick="removeMeta('${id}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:0 2px;flex-shrink:0">×</button>`;
+  list.appendChild(div);
+  recalc();
+}
+function removeMeta(id){ const el=$('row-'+id); if(el) el.remove(); recalc(); }
+function getMetasData(){
+  const rows=[]; let i=0;
+  document.querySelectorAll('#metas-list .meta-row').forEach(el=>{
+    const id=el.id.replace('row-','');
+    rows.push({n:$('mn-'+id)?.value||'',v:parseFloat($('mv-'+id)?.value)||0,p:parseInt($('mp-'+id)?.value)||0,idx:i++});
+  });
+  return rows;
+}
 function sumCat(cat){
   let t=0;
   document.querySelectorAll(`[id^="val-${cat}-"]`).forEach(el=>t+=parseFloat(el.value)||0);
@@ -582,11 +659,10 @@ function recalc(){
   const gas=fij+vari+deu;
   const pctV=gf('cfg-pct')||20;
   const pres=gf('cfg-pres');
-  const ext=gf('cfg-ext');
-  const retiro=gf('cfg-retiro');
-  const extraacum=gf('cfg-extraacum');
+  const aex=sumAex();
+  const retiro=sumRet();
   const rem=ing-gas;
-  const aho=rem*(pctV/100)+ext;
+  const aho=rem*(pctV/100)+aex;
   const disp=ing-gas-aho;
 
   // Table totals
@@ -629,7 +705,7 @@ function recalc(){
   $('ah-disp').textContent=fmts(disp);
   $('ah-pct-lbl').textContent=pctV+'% a ahorro';
   $('ah-calc').textContent=fmts(rem*pctV/100);
-  $('ah-ext').textContent=fmts(ext);
+  $('ah-ext').textContent=fmts(aex);
   $('ah-total').textContent=fmts(aho);
 
   // Real vs ppto
@@ -644,10 +720,10 @@ function recalc(){
   $('rv-bar').style.background=pp>100?'var(--red)':pp>85?'var(--amber)':'var(--green)';
 
   // Annual
-  buildAnnual(ing,gas,fij,vari,deu,pres,aho,extraacum,pctV,ext,retiro);
+  buildAnnual(ing,gas,fij,vari,deu,pres,aho,retiro);
 
   // Metas
-  const totalReal=getAcumAho()+extraacum;
+  const totalReal=getAcumAho();
   $('k-acum').textContent=fmts(totalReal);
   buildMetas(totalReal);
 
@@ -665,13 +741,13 @@ function getAcumAho(){
   const ing=sumCat('ing'),fij=sumCat('fij'),vari=sumCat('var'),deu=sumCat('deu');
   const gas=fij+vari+deu;
   const pctV=gf('cfg-pct')||20;
-  const ext=gf('cfg-ext');
-  acc+=(ing-gas)*(pctV/100)+ext;
-  acc-=gf('cfg-retiro');
+  const aex=sumAex();
+  acc+=(ing-gas)*(pctV/100)+aex;
+  acc-=sumRet();
   return acc;
 }
 
-function buildAnnual(ingL,gasL,fijL,varL,deuL,presL,ahoL,extraacum,pctV,extL,retiroL){
+function buildAnnual(ingL,gasL,fijL,varL,deuL,presL,ahoL,retiroL){
   const ingA=[],gasA=[],presA=[],ahoA=[];
   let acIng=0,acGas=0,acAho=0,acFij=0,acVar=0,acDeu=0,acRet=0;
   for(let m=0;m<12;m++){
@@ -754,22 +830,29 @@ function buildAho(aho){
 }
 
 function buildMetas(totalReal){
-  const metas=[
-    {n:$('m1-n')?.value||'Meta 1',v:parseFloat($('m1-v')?.value)||0},
-    {n:$('m2-n')?.value||'Meta 2',v:parseFloat($('m2-v')?.value)||0},
-    {n:$('m3-n')?.value||'Meta 3',v:parseFloat($('m3-v')?.value)||0}
-  ].filter(m=>m.v>0);
-  const cols=['var(--green)','var(--amber)','var(--blue)'];
-  const hx=['#3dd68c','#f5a623','#5b8dee'];
-  $('metas-blocks').innerHTML=metas.length?metas.map((m,i)=>{
-    const prog=Math.min(totalReal/m.v*100,100);
-    const falta=Math.max(m.v-totalReal,0);
+  let metas=getMetasData().filter(m=>m.v>0);
+  // Ordenar por prioridad (vacío = al final); empate por orden de captura
+  metas.sort((a,b)=>{
+    const pa=a.p>0?a.p:Infinity, pb=b.p>0?b.p:Infinity;
+    return pa-pb || a.idx-b.idx;
+  });
+  let remaining=totalReal;
+  $('metas-blocks').innerHTML=metas.length?metas.map((m)=>{
+    const alloc=Math.min(Math.max(remaining,0),m.v); // lo que alcanza esta meta según el orden
+    remaining-=alloc;
+    const ratio=m.v>0?alloc/m.v:0;
+    const prog=ratio*100;
+    const falta=Math.max(m.v-alloc,0);
+    const done=falta<=0;
+    const hue=Math.round(ratio*120);              // 0=rojo, 60=amarillo, 120=verde
+    const col=`hsl(${hue},70%,47%)`;
+    const orden=m.p>0?`#${m.p} · `:'';
     return `<div class="goal">
-      <div class="gh"><span class="gname">${m.n}</span><span class="gpct" style="color:${cols[i]}">${prog.toFixed(1)}%</span></div>
-      <div class="gtrack"><div class="gfill" style="width:${prog}%;background:${hx[i]}"></div></div>
+      <div class="gh"><span class="gname">${orden}${m.n||'Meta'}</span><span class="gpct" style="color:${col}">${prog.toFixed(0)}%</span></div>
+      <div class="gtrack"><div class="gfill" style="width:${prog}%;background:${col};transition:width .4s,background .4s"></div></div>
       <div class="gfoot">
-        <span class="gacum">${fmts(totalReal)} de ${fmts(m.v)}</span>
-        <span class="gfalta" style="color:${falta===0?hx[i]:'var(--red)'}">${falta===0?'✓ Alcanzada':'Falta: '+fmts(falta)}</span>
+        <span class="gacum">${fmts(alloc)} de ${fmts(m.v)}</span>
+        <span class="gfalta" style="color:${done?'#3dd68c':'var(--muted2)'}">${done?'✓ ¡Meta lograda!':'Falta: '+fmts(falta)}</span>
       </div>
     </div>`;
   }).join(''):'<p style="font-size:11px;color:var(--muted2)">Configura tus metas en Ingresar datos.</p>';
@@ -1039,10 +1122,11 @@ function saveLocal(){
   ['ing','fij','var','deu'].forEach(cat=>{
     localStorage.setItem(skey(cat,curM,curY),JSON.stringify(getCatData(cat)));
   });
-  const cfg={pres:$('cfg-pres')?.value||'',pct:$('cfg-pct')?.value||'20',ext:$('cfg-ext')?.value||'',retiro:$('cfg-retiro')?.value||'',extraacum:$('cfg-extraacum')?.value||''};
+  localStorage.setItem(skey('aex',curM,curY),JSON.stringify(getAexData()));
+  localStorage.setItem(skey('ret',curM,curY),JSON.stringify(getRetData()));
+  const cfg={pres:$('cfg-pres')?.value||'',pct:$('cfg-pct')?.value||'20'};
   localStorage.setItem(skey('cfg',curM,curY),JSON.stringify(cfg));
-  const metas={m1n:$('m1-n')?.value||'',m1v:$('m1-v')?.value||'',m2n:$('m2-n')?.value||'',m2v:$('m2-v')?.value||'',m3n:$('m3-n')?.value||'',m3v:$('m3-v')?.value||''};
-  localStorage.setItem('fin4_metas',JSON.stringify(metas));
+  localStorage.setItem('fin4_metas',JSON.stringify(getMetasData()));
   localStorage.setItem('fin4_medeben',JSON.stringify(mdRows));
 }
 function showToast(txt){ const t=$('toast'); t.textContent=txt; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
@@ -1104,11 +1188,13 @@ function loadSaved(m,y){
     const deu=dr.reduce((a,r)=>a+r.val,0);
     const gas=fij+vari+deu;
     const pct=parseFloat(cfg.pct)||20;
-    const ext=parseFloat(cfg.ext)||0;
-    const retiro=parseFloat(cfg.retiro)||0;
+    const aexArr=JSON.parse(localStorage.getItem(skey('aex',m,y))||'null');
+    const aex=(aexArr&&aexArr.length) ? aexArr.reduce((a,r)=>a+(parseFloat(r.val)||0),0) : (parseFloat(cfg.ext)||0);
+    const retArr=JSON.parse(localStorage.getItem(skey('ret',m,y))||'null');
+    const retiro=(retArr&&retArr.length) ? retArr.reduce((a,r)=>a+(parseFloat(r.val)||0),0) : (parseFloat(cfg.retiro)||0);
     const pres=parseFloat(cfg.pres)||0;
-    const aho=(ing-gas)*(pct/100)+ext;
-    return {ing,gas,fij,vari,deu,pres,pct,ext,aho,retiro};
+    const aho=(ing-gas)*(pct/100)+aex;
+    return {ing,gas,fij,vari,deu,pres,pct,aex,aho,retiro};
   }catch(e){return null;}
 }
 
@@ -1128,13 +1214,33 @@ function loadMonth(m,y){
   const cfg=JSON.parse(localStorage.getItem(skey('cfg',m,y))||'{}');
   if($('cfg-pres'))$('cfg-pres').value=cfg.pres||'';
   if($('cfg-pct'))$('cfg-pct').value=cfg.pct||'20';
-  if($('cfg-ext'))$('cfg-ext').value=cfg.ext||'';
-  if($('cfg-retiro'))$('cfg-retiro').value=cfg.retiro||'';
-  if($('cfg-extraacum'))$('cfg-extraacum').value=cfg.extraacum||'';
-  const metas=JSON.parse(localStorage.getItem('fin4_metas')||'{}');
-  ['m1-n','m1-v','m2-n','m2-v','m3-n','m3-v'].forEach(id=>{
-    const el=$(id); if(el) el.value=metas[id.replace('-','')];
-  });
+  // retiros de ahorro
+  if($('ret-list')){ $('ret-list').innerHTML=''; retCnt=0;
+    let retArr=JSON.parse(localStorage.getItem(skey('ret',m,y))||'null');
+    if(!retArr){ retArr=[]; const or=parseFloat(cfg.retiro)||0; if(or) retArr.push({lbl:'Retiro',val:or}); }
+    if(retArr.length) retArr.forEach(r=>addRet(r.lbl,r.val));
+  }
+  // aportes extra al ahorro
+  if($('aex-list')){ $('aex-list').innerHTML=''; aexCnt=0;
+    let aexArr=JSON.parse(localStorage.getItem(skey('aex',m,y))||'null');
+    if(!aexArr){ // migración desde la versión anterior
+      aexArr=[];
+      const oe=parseFloat(cfg.ext)||0, oa=parseFloat(cfg.extraacum)||0;
+      if(oe) aexArr.push({lbl:'Aporte extra',val:oe});
+      if(oa) aexArr.push({lbl:'Ahorro previo',val:oa});
+    }
+    if(aexArr.length) aexArr.forEach(r=>addAex(r.lbl,r.val));
+  }
+  // metas de ahorro (globales)
+  if($('metas-list')){ $('metas-list').innerHTML=''; metaCnt=0;
+    let mRaw=JSON.parse(localStorage.getItem('fin4_metas')||'null');
+    let arr=[];
+    if(Array.isArray(mRaw)) arr=mRaw;
+    else if(mRaw&&typeof mRaw==='object'){ // migración del formato viejo {m1n,m1v,...}
+      for(let i=1;i<=3;i++){ const n=mRaw['m'+i+'n']||'', v=mRaw['m'+i+'v']||''; if(n||v) arr.push({n,v,p:i}); }
+    }
+    if(arr.length) arr.forEach(mt=>addMeta(mt.n,mt.v,mt.p||'')); else addMeta();
+  }
   try{
     mdRows=JSON.parse(localStorage.getItem('fin4_medeben')||'[]');
     renderMeDebenInput();
@@ -1151,6 +1257,8 @@ function showTab(name,el){
 $('selMes').addEventListener('change',function(){curM=parseInt(this.value);loadMonth(curM,curY);recalc();});
 $('selAno').addEventListener('change',function(){curY=this.value;loadMonth(curM,curY);recalc();});
 
+$('selMes').value=curM;
+$('selAno').value=curY;
 loadMonth(curM,curY);
 recalc();
 driveTryAutoConnect();</script>
