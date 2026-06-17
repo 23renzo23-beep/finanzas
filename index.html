@@ -652,6 +652,17 @@ function getMetasData(){
   });
   return rows;
 }
+function normalizeMetaPrios(){
+  // Reordena los números de prioridad a 1,2,3... respetando el orden (menor primero).
+  const rows=[...document.querySelectorAll('#metas-list .meta-row')]
+    .filter(r=>(parseInt($('mp-'+r.id.replace('row-',''))?.value)||0)>0);
+  rows.sort((a,b)=>{
+    const pa=parseInt($('mp-'+a.id.replace('row-','')).value)||0;
+    const pb=parseInt($('mp-'+b.id.replace('row-','')).value)||0;
+    return pa-pb;
+  });
+  rows.forEach((r,i)=>{ const el=$('mp-'+r.id.replace('row-','')); if(el) el.value=String(i+1); });
+}
 function sumCat(cat){
   let t=0;
   document.querySelectorAll(`[id^="val-${cat}-"]`).forEach(el=>t+=parseFloat(el.value)||0);
@@ -1145,6 +1156,8 @@ function saveLocal(){
 function showToast(txt){ const t=$('toast'); t.textContent=txt; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
 
 async function guardar(){
+  normalizeMetaPrios();
+  recalc();
   saveLocal();
   const b=$('btnSave');
   // Sin conexión a Google: solo guarda en este equipo
