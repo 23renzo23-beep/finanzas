@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manual — Mis Finanzas</title>
+<style>
+:root{--bg:#0b0c14;--card:#13141f;--card2:#181a28;--border:#252640;--purple:#7c6ff7;--green:#3dd68c;--amber:#f5a623;--red:#f06a6a;--blue:#5b8dee;--text:#ddddf0;--text2:#a9aac8;--muted:#8a8baa}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',system-ui,sans-serif;line-height:1.65;padding:32px 18px}
+.wrap{max-width:760px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:24px}
+.mark{width:32px;height:32px;background:var(--purple);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff}
+.brand b{font-size:13px;letter-spacing:.04em}
+h1{font-size:25px;margin-bottom:6px}
+.sub{color:var(--muted);font-size:12px;margin-bottom:26px}
+h2{font-size:17px;color:var(--purple);margin:26px 0 8px;padding-top:10px;border-top:1px solid var(--border)}
+h3{font-size:14px;color:var(--text);margin:16px 0 4px}
+p{color:var(--text2);font-size:14px;margin-bottom:10px}
+ul,ol{color:var(--text2);font-size:14px;margin:0 0 10px 20px}
+li{margin-bottom:6px}
+b,strong{color:var(--text)}
+.box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin:14px 0}
+.box.green{border-color:#2c6e52}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;margin-right:4px}
+.t-up{background:#16233f;color:var(--blue)}
+.t-save{background:#2a225a;color:var(--purple)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:middle;margin-right:5px}
+footer{margin-top:36px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:12px}
+a{color:var(--purple)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><div class="mark">F</div><b>MIS FINANZAS</b></div>
+  <h1>Manual de uso</h1>
+  <div class="sub">Guía rápida para usar tu dashboard financiero personal</div>
+
+  <div class="box green">
+    <p style="margin:0"><strong>Tus datos son privados.</strong> Cada persona entra con su propia cuenta de Google (Gmail) y sus datos se guardan en su propio Google Drive. Nadie más —ni el creador de la app ni otros usuarios— puede ver tu información. Lo que escribas queda ligado únicamente a la cuenta con la que iniciaste sesión.</p>
+  </div>
+
+  <h2>1. Cómo empezar</h2>
+  <ol>
+    <li>Abre la app desde su enlace web (puedes guardarla en la pantalla de inicio de tu celular, ver la sección 8).</li>
+    <li>Arriba a la derecha, pulsa el botón <strong>Google</strong> y luego <strong>Conectar con Google</strong>.</li>
+    <li>Inicia sesión con tu cuenta. Acepta los permisos (la app solo podrá usar el archivo que ella misma crea y ver tu correo).</li>
+    <li>Cuando estés conectado, arriba verás tu correo con un <span class="dot" style="background:var(--green)"></span>punto verde.</li>
+  </ol>
+
+  <h2>2. La rutina de cada día</h2>
+  <p>Para no perder datos entre tu celular y tu computadora, sigue este orden simple:</p>
+  <div class="box">
+    <p style="margin:0"><span class="tag t-up">↻ Actualizar</span> al abrir, para traer lo último que guardaste en tu Drive.<br>
+    <span class="tag t-save">💾 Guardar</span> al terminar, para guardar en tu equipo y en tu Drive.</p>
+  </div>
+  <p>Regla de oro: <strong>Actualizar antes de empezar, Guardar al terminar.</strong> Así tus dos dispositivos siempre quedan con la misma información.</p>
+
+  <h2>3. Elegir el mes y el año</h2>
+  <p>Arriba eliges el <strong>mes</strong> y el <strong>año</strong> que quieres ver o llenar. Cada mes guarda sus propios datos por separado. La app abre en el mes y año actual automáticamente.</p>
+
+  <h2>4. Ingresar tus datos</h2>
+  <p>En la pestaña <strong>Ingresar datos</strong> encontrarás varias secciones. En cada una usa el botón <strong>+ Añadir</strong> para agregar las filas que necesites:</p>
+  <ul>
+    <li><strong>Ingresos:</strong> tu sueldo y cualquier otra entrada de dinero del mes.</li>
+    <li><strong>Gastos fijos:</strong> los que se repiten (alquiler, servicios…).</li>
+    <li><strong>Gastos variables:</strong> los que cambian (comida, transporte…).</li>
+    <li><strong>Deudas / cuotas:</strong> pagos de deudas del mes.</li>
+  </ul>
+
+  <h2>5. Ahorro y configuración</h2>
+  <ul>
+    <li><strong>Presupuesto mensual:</strong> cuánto planeas gastar (para comparar con lo real).</li>
+    <li><strong>% del remanente a ahorrar:</strong> qué porcentaje de lo que te queda (ingreso − gastos) quieres ahorrar. Puede ser distinto cada mes.</li>
+    <li><strong>Aportes extra al ahorro:</strong> montos adicionales que guardas ese mes (un bono, un regalo…). Puedes añadir varios con + Añadir.</li>
+    <li><strong>Retiro de ahorros:</strong> dinero que sacas de tus ahorros. Reduce tu ahorro acumulado, sin afectar tu sueldo ni tu disponible del mes. Puedes añadir varios.</li>
+  </ul>
+
+  <h2>6. Metas de ahorro (con orden de prioridad)</h2>
+  <p>Cada meta tiene un <strong>nombre</strong>, un <strong>Nº de orden</strong> y un <strong>monto</strong>. El número decide cuál se cumple primero (1 = primera), sin importar el monto.</p>
+  <p>Tu ahorro acumulado se reparte <strong>en cascada</strong>: llena primero la meta #1; cuando llega al 100% pasa a la #2, y así. Cada meta tiene una barra tipo termómetro:</p>
+  <ul>
+    <li><span class="dot" style="background:var(--red)"></span><strong>Roja:</strong> aún lejos de la meta.</li>
+    <li><span class="dot" style="background:var(--amber)"></span><strong>Amarilla:</strong> vas a medio camino.</li>
+    <li><span class="dot" style="background:var(--green)"></span><strong>Verde + "✓ ¡Meta lograda!":</strong> ya juntaste lo suficiente para esa meta.</li>
+  </ul>
+  <p>Al pulsar <strong>Guardar</strong>, los números de orden se reacomodan solos a 1, 2, 3… No se permite repetir el mismo número en dos metas.</p>
+
+  <h2>7. El Dashboard (resumen visual)</h2>
+  <ul>
+    <li><strong>Indicadores</strong> arriba: ingreso, presupuesto, gastos, disponible y ahorro del mes.</li>
+    <li><strong>Distribución mensual y acumulada:</strong> muestran cómo se reparte tu ingreso entre disponible, gastos, deudas y ahorro.</li>
+    <li><strong>Tabla anual:</strong> resumen mes por mes.</li>
+    <li><strong>Metas:</strong> las barras de color con tu avance.</li>
+    <li><strong>Me deben / por cobrar:</strong> para anotar lo que otros te deben.</li>
+  </ul>
+  <p>Arriba al centro verás <strong>"Último registro"</strong> con la fecha y hora del último guardado. Es la misma en todos tus dispositivos tras Actualizar.</p>
+
+  <h2>8. Usarla como app en el celular</h2>
+  <p>Abre el enlace en el navegador del celular y elige <strong>"Añadir a pantalla de inicio"</strong>:</p>
+  <ul>
+    <li><strong>Android (Chrome):</strong> menú ⋮ → "Añadir a la pantalla principal".</li>
+    <li><strong>iPhone (Safari):</strong> botón Compartir → "Añadir a pantalla de inicio".</li>
+  </ul>
+  <p>Quedará con su ícono y a pantalla completa, como una app normal. Funciona incluso sin internet para llenar y guardar en el equipo; el internet solo hace falta para sincronizar con Drive.</p>
+
+  <h2>9. Respaldo manual (opcional)</h2>
+  <p>En el botón <strong>Google</strong> tienes <strong>⬇ Bajar copia</strong> (guarda un archivo con tus datos) y <strong>⬆ Restaurar copia</strong> (los vuelve a cargar). Útil como respaldo extra.</p>
+
+  <h2>10. Privacidad — en detalle</h2>
+  <p>Esta app no tiene servidores propios ni una base de datos central. Por eso:</p>
+  <ul>
+    <li>Cada usuario inicia sesión con <strong>su</strong> cuenta de Google y sus datos quedan en <strong>su</strong> propio Drive.</li>
+    <li>El permiso que se solicita solo deja a la app usar el archivo que ella crea; no puede ver el resto de tu Drive.</li>
+    <li>El creador de la app y los demás usuarios <strong>nunca</strong> tienen acceso a tu información.</li>
+    <li>Para retirar el acceso, entra a <a href="https://myaccount.google.com/connections" target="_blank" rel="noopener">las conexiones de tu cuenta de Google</a>.</li>
+  </ul>
+
+  <footer>Mis Finanzas — manual de uso. Tus datos, en tu cuenta, bajo tu control.</footer>
+</div>
+</body>
+</html>
