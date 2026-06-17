@@ -65,7 +65,7 @@ a{color:var(--purple)}
     <li><strong>Ingresos:</strong> tu sueldo y cualquier otra entrada de dinero del mes.</li>
     <li><strong>Gastos fijos:</strong> los que se repiten (alquiler, servicios…).</li>
     <li><strong>Gastos variables:</strong> los que cambian (comida, transporte…).</li>
-    <li><strong>Deudas / cuotas:</strong> pagos de deudas del mes.</li>
+    <li><strong>Deudas:</strong> aquí solo las <strong>registras</strong> (nombre, número de orden y monto). El pago en sí se hace después, desde el Dashboard — ver la sección 7.</li>
   </ul>
 
   <h2>5. Ahorro y configuración</h2>
@@ -86,17 +86,32 @@ a{color:var(--purple)}
   </ul>
   <p>Al pulsar <strong>Guardar</strong>, los números de orden se reacomodan solos a 1, 2, 3… No se permite repetir el mismo número en dos metas.</p>
 
-  <h2>7. El Dashboard (resumen visual)</h2>
+  <h2>7. Deudas (con prioridad y pago manual)</h2>
+  <p>Las deudas funcionan distinto a los gastos fijos o variables: <strong>registrarlas no descuenta nada solo</strong>. Tienen su propio flujo:</p>
+  <ol>
+    <li>En <strong>Ingresar datos</strong> registras la deuda: nombre, <strong>Nº de orden</strong> (prioridad) y monto.</li>
+    <li>Desde ese momento, la deuda aparece en el <strong>Dashboard</strong>, en la tarjeta "Deudas", mes tras mes, mientras no la pagues (esto es el "arrastre": si no la pagas este mes, sigue apareciendo el siguiente).</li>
+    <li>Cuando tengas el dinero, pulsa <strong>Pagar</strong> en su tarjeta del Dashboard. Ese es el único momento en que el dinero sale: se resta del <strong>disponible del mes en que pagas</strong>, no de un mes anterior ni del ahorro.</li>
+    <li>Una vez pagada, deja de aparecer en los meses siguientes; en el mes en que la pagaste queda marcada como <strong>"✓ Pagado"</strong> (con un enlace "deshacer" por si te equivocaste).</li>
+  </ol>
+  <p>Igual que las metas, las deudas se priorizan <strong>en cascada</strong> según su Nº de orden: el dinero disponible del mes se reparte primero a la deuda #1; si alcanza para pagarla completa, lo que sobra se ofrece a la #2, y así. La barra tipo termómetro de cada deuda te dice qué tan cerca estás de poder pagarla con el disponible actual.</p>
+  <div class="box">
+    <p style="margin:0"><strong>Importante:</strong> las deudas <strong>nunca</strong> reducen tu % de ahorro — el ahorro se calcula solo con ingresos, gastos fijos y variables. Pagar una deuda únicamente reduce tu disponible del mes.</p>
+  </div>
+  <p>Al pulsar <strong>Guardar</strong>, los números de orden de las deudas activas (no pagadas) se reacomodan solos a 1, 2, 3…, igual que en las metas.</p>
+
+  <h2>8. El Dashboard (resumen visual)</h2>
   <ul>
     <li><strong>Indicadores</strong> arriba: ingreso, presupuesto, gastos, disponible y ahorro del mes.</li>
-    <li><strong>Distribución mensual y acumulada:</strong> muestran cómo se reparte tu ingreso entre disponible, gastos, deudas y ahorro.</li>
+    <li><strong>Distribución mensual y acumulada:</strong> muestran cómo se reparte tu ingreso entre disponible, gastos, deudas pagadas y ahorro.</li>
     <li><strong>Tabla anual:</strong> resumen mes por mes.</li>
     <li><strong>Metas:</strong> las barras de color con tu avance.</li>
+    <li><strong>Deudas:</strong> tarjeta con el botón Pagar y el avance de cada deuda (ver sección 7).</li>
     <li><strong>Me deben / por cobrar:</strong> para anotar lo que otros te deben.</li>
   </ul>
   <p>Arriba al centro verás <strong>"Último registro"</strong> con la fecha y hora del último guardado. Es la misma en todos tus dispositivos tras Actualizar.</p>
 
-  <h2>8. Usarla como app en el celular</h2>
+  <h2>9. Usarla como app en el celular</h2>
   <p>Abre el enlace en el navegador del celular y elige <strong>"Añadir a pantalla de inicio"</strong>:</p>
   <ul>
     <li><strong>Android (Chrome):</strong> menú ⋮ → "Añadir a la pantalla principal".</li>
@@ -104,10 +119,10 @@ a{color:var(--purple)}
   </ul>
   <p>Quedará con su ícono y a pantalla completa, como una app normal. Funciona incluso sin internet para llenar y guardar en el equipo; el internet solo hace falta para sincronizar con Drive.</p>
 
-  <h2>9. Respaldo manual (opcional)</h2>
+  <h2>10. Respaldo manual (opcional)</h2>
   <p>En el botón <strong>Google</strong> tienes <strong>⬇ Bajar copia</strong> (guarda un archivo con tus datos) y <strong>⬆ Restaurar copia</strong> (los vuelve a cargar). Útil como respaldo extra.</p>
 
-  <h2>10. Privacidad — en detalle</h2>
+  <h2>11. Privacidad — en detalle</h2>
   <p>Esta app no tiene servidores propios ni una base de datos central. Por eso:</p>
   <ul>
     <li>Cada usuario inicia sesión con <strong>su</strong> cuenta de Google y sus datos quedan en <strong>su</strong> propio Drive.</li>

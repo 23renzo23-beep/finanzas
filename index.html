@@ -373,6 +373,14 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',syste
     </div>
   </div>
 
+  <!-- Fila 5: deudas -->
+  <div class="grid" style="grid-template-columns:1fr">
+    <div class="card">
+      <div class="ct">DEUDAS</div>
+      <div id="deudas-blocks"><p style="font-size:11px;color:var(--muted2)">Configura tus deudas en Ingresar datos.</p></div>
+    </div>
+  </div>
+
   <!-- Tabla anual -->
   <div class="card">
     <div class="ct">TABLA RESUMEN ANUAL</div>
@@ -410,8 +418,10 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',syste
 
     <!-- DEUDAS -->
     <div class="dtable" id="tbl-deu">
-      <div class="dth"><div class="dth-dot" style="background:var(--red)"></div><span class="dth-lbl">Deudas / cuotas</span><span class="dth-tot" style="color:var(--red)" id="tot-deu">S/ 0</span></div>
-      <div class="drow-add"><button class="btn-add" onclick="addRow('tbl-deu','deu')">+ Añadir fila</button></div>
+      <div class="dth"><div class="dth-dot" style="background:var(--red)"></div><span class="dth-lbl">Deudas</span><span class="dth-tot" style="color:var(--red)" id="tot-deu">S/ 0</span></div>
+      <div style="padding:8px 10px 0;font-size:9px;color:var(--muted)">Nombre · Nº de orden (prioridad) · monto. Se pagan desde el Dashboard con el botón Pagar.</div>
+      <div id="deudas-list" style="display:flex;flex-direction:column;padding:6px 10px 2px"></div>
+      <div class="drow-add"><button class="btn-add" onclick="addDeuda()">+ Añadir deuda</button></div>
     </div>
 
     <!-- CONFIG -->
@@ -527,13 +537,13 @@ const _now=new Date();
 let curM=_now.getMonth(), curY=String(_now.getFullYear());
 let _cBar=null, _cAho=null, _cDonut=null, _cDonutA=null;
 let mdRows=[];
-const cnts={ing:0,fij:0,var:0,deu:0};
+const cnts={ing:0,fij:0,var:0};
 const defLabels={
   ing:['Sueldo / salario','Ingreso extra 1','Ingreso extra 2'],
   fij:['Alquiler / hipoteca','Servicios básicos','Internet / teléfono','Seguro / membresías'],
-  var:['Alimentación','Transporte','Salud / farmacia','Ocio / entretenimiento','Ropa / personal'],
-  deu:['Cuota deuda 1','Cuota deuda 2','Cuota deuda 3']
+  var:['Alimentación','Transporte','Salud / farmacia','Ocio / entretenimiento','Ropa / personal']
 };
+let deudaRows=[]; // deudas globales: {id,n,v,p,fr:{m,y},pagadoEn:{m,y}|null}
 
 const $=id=>document.getElementById(id);
 const fmts=n=>'S/ '+(Math.round(n*100)/100).toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -549,7 +559,7 @@ function addRow(tblId,cat,lbl='',val=''){
   const idx=cnts[cat]++;
   const rid=`${cat}-${idx}`;
   const defLbl=defLabels[cat]?defLabels[cat][idx]||'':'';
-  const colMap={ing:'ci',fij:'',var:'',deu:''};
+  const colMap={ing:'ci',fij:'',var:''};
   const div=document.createElement('div');
   div.className='drow'; div.id='row-'+rid;
   div.innerHTML=`
@@ -683,15 +693,134 @@ function getCatData(cat){
   return rows;
 }
 
+/* ── DEUDAS (prioridad en cascada, pago manual, arrastre entre meses) ──
+   Una deuda es visible desde el mes en que se registró hasta el mes en que
+   se pagó (inclusive); luego desaparece. Mientras no se pague, sigue
+   apareciendo mes tras mes. El pago NO debita automáticamente: solo al
+   pulsar "Pagar" (en el Dashboard) se resta del disponible del mes en que
+   se paga. El % de ahorro nunca se ve afectado por las deudas. */
+function sameYM(o,m,y){ return !!o && o.m===m && String(o.y)===String(y); }
+function ymKey(m,y){ return parseInt(y)*12+m; }
+function deudaVisibleEnMes(d,m,y){
+  const fr=d.fr||{m,y};
+  if(ymKey(fr.m,fr.y)>ymKey(m,y)) return false;           // aún no registrada en ese mes
+  if(d.pagadoEn && ymKey(d.pagadoEn.m,d.pagadoEn.y)<ymKey(m,y)) return false; // ya se pagó antes de ese mes
+  return true;
+}
+function deudaPagadaEnMes(m,y){
+  return deudaRows.filter(d=>d.pagadoEn&&sameYM(d.pagadoEn,m,y)).reduce((a,d)=>a+(parseFloat(d.v)||0),0);
+}
+function getDeudaPendienteGlobal(){
+  return deudaRows.filter(d=>!d.pagadoEn).reduce((a,d)=>a+(parseFloat(d.v)||0),0);
+}
+function addDeuda(n='',v='',p=''){
+  deudaRows.push({id:Date.now()+Math.random(),n,v:parseFloat(v)||0,p:parseInt(p)||0,fr:{m:curM,y:curY},pagadoEn:null});
+  renderDeudaInput();
+}
+function removeDeuda(id){
+  deudaRows=deudaRows.filter(d=>d.id!==id);
+  renderDeudaInput();
+}
+function syncDeuda(id){
+  const r=deudaRows.find(d=>d.id===id);
+  if(!r) return;
+  r.n=$('dn-'+id)?.value||'';
+  r.v=parseFloat($('dv-'+id)?.value)||0;
+  r.p=parseInt($('dp-'+id)?.value)||0;
+  recalc();
+}
+function validaPrioDeuda(id){
+  const r=deudaRows.find(d=>d.id===id);
+  if(!r||!r.p) return;
+  const dup=deudaRows.some(o=>o.id!==id && !o.pagadoEn && o.p===r.p);
+  if(dup){ showToast('El orden '+r.p+' ya está usado en otra deuda'); r.p=0; renderDeudaInput(); }
+}
+function normalizeDeudaPrios(){
+  // Reordena la prioridad de las deudas activas (no pagadas) a 1,2,3...
+  const pend=deudaRows.filter(d=>!d.pagadoEn && d.p>0);
+  pend.sort((a,b)=>a.p-b.p);
+  pend.forEach((d,i)=>{ d.p=i+1; });
+  renderDeudaInput();
+}
+function pagarDeuda(id){
+  const r=deudaRows.find(d=>d.id===id);
+  if(!r||r.pagadoEn) return;
+  r.pagadoEn={m:curM,y:curY};
+  recalc();
+  showToast('✓ '+(r.n||'Deuda')+' pagada — no olvides presionar Guardar');
+}
+function deshacerPagoDeuda(id){
+  const r=deudaRows.find(d=>d.id===id);
+  if(!r) return;
+  r.pagadoEn=null;
+  recalc();
+}
+function renderDeudaInput(){
+  const list=$('deudas-list'); if(!list) return;
+  list.innerHTML=deudaRows.length?deudaRows.map(r=>{
+    const fr=r.fr||{m:curM,y:curY};
+    const estado=r.pagadoEn
+      ?`Pagada · ${MN[r.pagadoEn.m].slice(0,3)} ${r.pagadoEn.y}`
+      :`Activa desde ${MN[fr.m].slice(0,3)} ${fr.y}`;
+    return `<div style="display:flex;flex-direction:column;gap:3px;padding:6px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;gap:5px;align-items:center">
+        <input class="md-inp" id="dn-${r.id}" type="text" placeholder="Nombre de la deuda" value="${r.n||''}" oninput="syncDeuda(${r.id})" style="flex:1">
+        <input class="md-inp" id="dp-${r.id}" type="number" min="1" placeholder="Nº" value="${r.p||''}" oninput="syncDeuda(${r.id})" onchange="validaPrioDeuda(${r.id})" style="width:40px;text-align:center;color:var(--purple)" title="Orden / prioridad (1 = primera, sin repetir)">
+        <input class="md-inp" id="dv-${r.id}" type="number" placeholder="S/" value="${r.v||''}" oninput="syncDeuda(${r.id})" style="width:66px;text-align:right;color:var(--red)">
+        <button onclick="removeDeuda(${r.id})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:0 2px;flex-shrink:0">×</button>
+      </div>
+      <div style="font-size:9px;color:${r.pagadoEn?'#3dd68c':'var(--muted2)'};padding-left:2px">${estado}${r.pagadoEn?` · <span style="cursor:pointer;text-decoration:underline" onclick="deshacerPagoDeuda(${r.id})">deshacer</span>`:''}</div>
+    </div>`;
+  }).join(''):'<p style="font-size:11px;color:var(--muted2)">Aún no has registrado deudas. Usa + Añadir deuda.</p>';
+  recalc();
+}
+function buildDeudasDash(dispFinal){
+  const visibles=deudaRows.filter(d=>deudaVisibleEnMes(d,curM,curY));
+  const pagadasEsteMes=visibles.filter(d=>d.pagadoEn&&sameYM(d.pagadoEn,curM,curY));
+  const pendientes=visibles.filter(d=>!d.pagadoEn);
+  pendientes.sort((a,b)=>{const pa=a.p>0?a.p:Infinity,pb=b.p>0?b.p:Infinity; return pa-pb;});
+  let remaining=Math.max(dispFinal,0);
+  const cardsPend=pendientes.map(d=>{
+    const v=parseFloat(d.v)||0;
+    const alloc=Math.min(Math.max(remaining,0),v);
+    remaining-=alloc;
+    const ratio=v>0?alloc/v:0;
+    const prog=ratio*100;
+    const puede=v>0&&alloc>=v;
+    const hue=Math.round(ratio*120);
+    const col=`hsl(${hue},70%,47%)`;
+    const orden=d.p>0?`#${d.p} · `:'';
+    return `<div class="goal">
+      <div class="gh"><span class="gname">${orden}${d.n||'Deuda'}</span><span class="gpct" style="color:${col}">${prog.toFixed(0)}%</span></div>
+      <div class="gtrack"><div class="gfill" style="width:${prog}%;background:${col};transition:width .4s,background .4s"></div></div>
+      <div class="gfoot">
+        <span class="gacum" style="color:${puede?'#3dd68c':'var(--muted2)'}">${fmts(v)}${puede?' · ✓ ya puedes pagarla':' · falta disponible'}</span>
+        <button class="save-btn" style="padding:3px 9px;font-size:10px" onclick="pagarDeuda(${d.id})">Pagar</button>
+      </div>
+    </div>`;
+  }).join('');
+  const cardsPag=pagadasEsteMes.map(d=>`
+    <div class="goal" style="opacity:.7">
+      <div class="gh"><span class="gname">${d.p>0?'#'+d.p+' · ':''}${d.n||'Deuda'}</span><span class="gpct" style="color:#3dd68c">✓ Pagado</span></div>
+      <div class="gfoot"><span class="gacum">${fmts(d.v)}</span><button class="save-btn act" style="padding:3px 9px;font-size:10px" onclick="deshacerPagoDeuda(${d.id})">Deshacer</button></div>
+    </div>`).join('');
+  const intro=visibles.length?`<div style="font-size:9px;color:var(--muted2);margin-bottom:8px">Disponible este mes para pagar deudas: <strong style="color:var(--text)">${fmts(Math.max(dispFinal,0))}</strong></div>`:'';
+  const html=intro+cardsPend+cardsPag;
+  $('deudas-blocks').innerHTML=html||'<p style="font-size:11px;color:var(--muted2)">Configura tus deudas en Ingresar datos.</p>';
+  $('tot-deu').textContent=fmts(getDeudaPendienteGlobal());
+}
+
 /* ── RECALC ── */
 function recalc(){
-  const ing=sumCat('ing'), fij=sumCat('fij'), vari=sumCat('var'), deu=sumCat('deu');
-  const gas=fij+vari+deu;
+  const ing=sumCat('ing'), fij=sumCat('fij'), vari=sumCat('var');
+  const deu=deudaPagadaEnMes(curM,curY); // deudas PAGADAS este mes (ya no se debitan automáticamente)
+  const gasBase=fij+vari;     // gasto fijo+variable; las deudas no afectan el % de ahorro
+  const gas=gasBase+deu;      // gasto total real (para KPIs, presupuesto y gráficos)
   const pctV=gf('cfg-pct')||20;
   const pres=gf('cfg-pres');
   const aex=sumAex();
   const retiro=sumRet();
-  const rem=ing-gas;
+  const rem=ing-gasBase;
   const aho=rem*(pctV/100)+aex;
   const disp=ing-gas-aho;
 
@@ -699,7 +828,6 @@ function recalc(){
   $('tot-ing').textContent=fmts(ing);
   $('tot-fij').textContent=fmts(fij);
   $('tot-var').textContent=fmts(vari);
-  $('tot-deu').textContent=fmts(deu);
 
   // KPIs
   $('lbl-mes').textContent=MN[curM]+' '+curY;
@@ -717,7 +845,7 @@ function recalc(){
   const cats2=[
     {l:'Gastos fijos',v:fij,c:'var(--blue)',h:'#5b8dee'},
     {l:'Gastos variables',v:vari,c:'var(--amber)',h:'#f5a623'},
-    {l:'Deudas / cuotas',v:deu,c:'var(--red)',h:'#f06a6a'}
+    {l:'Deudas pagadas',v:deu,c:'var(--red)',h:'#f06a6a'}
   ];
   const mx=Math.max(gas,1);
   $('bars-desglose').innerHTML=cats2.map(c=>`
@@ -757,6 +885,9 @@ function recalc(){
   $('k-acum').textContent=fmts(totalReal);
   buildMetas(totalReal);
 
+  // Deudas (dashboard con prioridad/cascada)
+  buildDeudasDash(disp);
+
   // Me deben dashboard
   renderMeDebenDash();
 }
@@ -767,12 +898,12 @@ function getAcumAho(){
     const s=loadSaved(m,curY);
     if(s) acc+=s.aho-(s.retiro||0);
   }
-  // current live month
-  const ing=sumCat('ing'),fij=sumCat('fij'),vari=sumCat('var'),deu=sumCat('deu');
-  const gas=fij+vari+deu;
+  // current live month (las deudas no afectan el ahorro)
+  const ing=sumCat('ing'),fij=sumCat('fij'),vari=sumCat('var');
+  const gasBase=fij+vari;
   const pctV=gf('cfg-pct')||20;
   const aex=sumAex();
-  acc+=(ing-gas)*(pctV/100)+aex;
+  acc+=(ing-gasBase)*(pctV/100)+aex;
   acc-=sumRet();
   return acc;
 }
@@ -1150,7 +1281,7 @@ function driveTryAutoConnect(){
 
 /* ── STORAGE ── */
 function saveLocal(){
-  ['ing','fij','var','deu'].forEach(cat=>{
+  ['ing','fij','var'].forEach(cat=>{
     localStorage.setItem(skey(cat,curM,curY),JSON.stringify(getCatData(cat)));
   });
   localStorage.setItem(skey('aex',curM,curY),JSON.stringify(getAexData()));
@@ -1159,6 +1290,7 @@ function saveLocal(){
   localStorage.setItem(skey('cfg',curM,curY),JSON.stringify(cfg));
   localStorage.setItem('fin4_metas',JSON.stringify(getMetasData()));
   localStorage.setItem('fin4_medeben',JSON.stringify(mdRows));
+  localStorage.setItem('fin4_deudas',JSON.stringify(deudaRows));
   localStorage.setItem('fin4_lastsave',new Date().toISOString());
   updateLastSave();
 }
@@ -1174,6 +1306,7 @@ function showToast(txt){ const t=$('toast'); t.textContent=txt; t.classList.add(
 
 async function guardar(){
   normalizeMetaPrios();
+  normalizeDeudaPrios();
   recalc();
   saveLocal();
   const b=$('btnSave');
@@ -1223,26 +1356,26 @@ function loadSaved(m,y){
     const ir=JSON.parse(localStorage.getItem(skey('ing',m,y))||'[]');
     const fr=JSON.parse(localStorage.getItem(skey('fij',m,y))||'[]');
     const vr=JSON.parse(localStorage.getItem(skey('var',m,y))||'[]');
-    const dr=JSON.parse(localStorage.getItem(skey('deu',m,y))||'[]');
     const cfg=JSON.parse(localStorage.getItem(skey('cfg',m,y))||'{}');
     const ing=ir.reduce((a,r)=>a+r.val,0);
     const fij=fr.reduce((a,r)=>a+r.val,0);
     const vari=vr.reduce((a,r)=>a+r.val,0);
-    const deu=dr.reduce((a,r)=>a+r.val,0);
-    const gas=fij+vari+deu;
+    const gasBase=fij+vari;
+    const deu=deudaPagadaEnMes(m,y); // deudas pagadas ese mes (registro global, con arrastre)
+    const gas=gasBase+deu;
     const pct=parseFloat(cfg.pct)||20;
     const aexArr=JSON.parse(localStorage.getItem(skey('aex',m,y))||'null');
     const aex=(aexArr&&aexArr.length) ? aexArr.reduce((a,r)=>a+(parseFloat(r.val)||0),0) : (parseFloat(cfg.ext)||0);
     const retArr=JSON.parse(localStorage.getItem(skey('ret',m,y))||'null');
     const retiro=(retArr&&retArr.length) ? retArr.reduce((a,r)=>a+(parseFloat(r.val)||0),0) : (parseFloat(cfg.retiro)||0);
     const pres=parseFloat(cfg.pres)||0;
-    const aho=(ing-gas)*(pct/100)+aex;
+    const aho=(ing-gasBase)*(pct/100)+aex;
     return {ing,gas,fij,vari,deu,pres,pct,aex,aho,retiro};
   }catch(e){return null;}
 }
 
 function loadMonth(m,y){
-  ['ing','fij','var','deu'].forEach(cat=>{
+  ['ing','fij','var'].forEach(cat=>{
     cnts[cat]=0;
     const tbl=$('tbl-'+cat);
     tbl.querySelectorAll('.drow').forEach(r=>r.remove());
@@ -1250,7 +1383,7 @@ function loadMonth(m,y){
     if(saved&&saved.length){
       saved.forEach(r=>addRow('tbl-'+cat,cat,r.lbl,r.val));
     } else {
-      const defs={ing:['Sueldo / salario'],fij:['Alquiler / hipoteca','Servicios básicos'],var:['Alimentación','Transporte'],deu:['Cuota deuda 1']};
+      const defs={ing:['Sueldo / salario'],fij:['Alquiler / hipoteca','Servicios básicos'],var:['Alimentación','Transporte']};
       (defs[cat]||[]).forEach(lbl=>addRow('tbl-'+cat,cat,lbl,''));
     }
   });
@@ -1288,6 +1421,11 @@ function loadMonth(m,y){
     mdRows=JSON.parse(localStorage.getItem('fin4_medeben')||'[]');
     renderMeDebenInput();
   }catch(e){mdRows=[];}
+  // deudas (globales, con arrastre entre meses)
+  try{
+    deudaRows=JSON.parse(localStorage.getItem('fin4_deudas')||'[]');
+  }catch(e){ deudaRows=[]; }
+  renderDeudaInput();
 }
 
 function showTab(name,el){
