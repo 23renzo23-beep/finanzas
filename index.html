@@ -624,13 +624,26 @@ function addMeta(n='',v='',p=''){
   div.style.cssText='display:flex;gap:5px;align-items:center';
   div.innerHTML=`
     <input class="md-inp" id="mn-${id}" type="text" placeholder="Nombre de la meta" value="${n}" oninput="recalc()" style="flex:1">
-    <input class="md-inp" id="mp-${id}" type="number" min="1" placeholder="Nº" value="${p}" oninput="recalc()" style="width:40px;text-align:center;color:var(--purple)" title="Orden / prioridad (1 = primera)">
+    <input class="md-inp" id="mp-${id}" type="number" min="1" placeholder="Nº" value="${p}" oninput="recalc()" onchange="validaPrio('${id}')" style="width:40px;text-align:center;color:var(--purple)" title="Orden / prioridad (1 = primera, sin repetir)">
     <input class="md-inp" id="mv-${id}" type="number" placeholder="S/" value="${v}" oninput="recalc()" style="width:66px;text-align:right;color:var(--blue)">
     <button onclick="removeMeta('${id}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:0 2px;flex-shrink:0">×</button>`;
   list.appendChild(div);
   recalc();
 }
 function removeMeta(id){ const el=$('row-'+id); if(el) el.remove(); recalc(); }
+function validaPrio(id){
+  const el=$('mp-'+id); if(!el) return;
+  const v=parseInt(el.value)||0;
+  if(v>0){
+    let dup=false;
+    document.querySelectorAll('#metas-list .meta-row').forEach(row=>{
+      const oid=row.id.replace('row-','');
+      if(oid!==id && (parseInt($('mp-'+oid)?.value)||0)===v) dup=true;
+    });
+    if(dup){ showToast('El orden '+v+' ya está usado en otra meta'); el.value=''; setTimeout(()=>el.focus(),0); }
+  }
+  recalc();
+}
 function getMetasData(){
   const rows=[]; let i=0;
   document.querySelectorAll('#metas-list .meta-row').forEach(el=>{
