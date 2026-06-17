@@ -414,6 +414,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',syste
       <div class="drow"><span class="drow-lbl">Presupuesto mensual</span><input class="drow-inp ci" id="cfg-pres" type="number" placeholder="0" oninput="recalc()"></div>
       <div class="drow"><span class="drow-lbl">% del remanente a ahorrar</span><input class="drow-inp ca" id="cfg-pct" type="number" placeholder="20" min="0" max="100" oninput="recalc()"></div>
       <div class="drow"><span class="drow-lbl">Aporte extra este mes</span><input class="drow-inp cg" id="cfg-ext" type="number" placeholder="0" oninput="recalc()"></div>
+      <div class="drow"><span class="drow-lbl">Retiro de ahorros (para un pago)</span><input class="drow-inp cg" id="cfg-retiro" type="number" placeholder="0" min="0" oninput="recalc()"></div>
       <div class="drow"><span class="drow-lbl">Ahorro extra acumulado</span><input class="drow-inp cg" id="cfg-extraacum" type="number" placeholder="0" oninput="recalc()"></div>
       <div style="padding:10px 12px;border-top:1px solid var(--border)">
         <div style="font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--muted2);text-transform:uppercase;margin-bottom:8px">Metas de ahorro</div>
@@ -519,7 +520,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',syste
 <script>
 const MN=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const HX_D=['#3dd68c','#5b8dee','#f5a623','#f06a6a','#7c6ff7'];
-const LBS_D=['Ingresos','Fijos','Variables','Deudas','Ahorro'];
+const LBS_D=['Disponible','Fijos','Variables','Deudas','Ahorro'];
 let curM=5, curY='2025';
 let _cBar=null, _cAho=null, _cDonut=null, _cDonutA=null;
 let mdRows=[];
@@ -582,6 +583,7 @@ function recalc(){
   const pctV=gf('cfg-pct')||20;
   const pres=gf('cfg-pres');
   const ext=gf('cfg-ext');
+  const retiro=gf('cfg-retiro');
   const extraacum=gf('cfg-extraacum');
   const rem=ing-gas;
   const aho=rem*(pctV/100)+ext;
@@ -621,7 +623,7 @@ function recalc(){
     </div>`).join('');
 
   // Monthly donut: ing, fij, vari, deu, aho
-  buildDonut('cDonut','dl-legend',[ing,fij,vari,deu,aho]);
+  buildDonut('cDonut','dl-legend',[disp,fij,vari,deu,aho]);
 
   // Ahorro panel
   $('ah-disp').textContent=fmts(disp);
@@ -642,7 +644,7 @@ function recalc(){
   $('rv-bar').style.background=pp>100?'var(--red)':pp>85?'var(--amber)':'var(--green)';
 
   // Annual
-  buildAnnual(ing,gas,fij,vari,deu,pres,aho,extraacum,pctV,ext);
+  buildAnnual(ing,gas,fij,vari,deu,pres,aho,extraacum,pctV,ext,retiro);
 
   // Metas
   const totalReal=getAcumAho()+extraacum;
@@ -657,7 +659,7 @@ function getAcumAho(){
   let acc=0;
   for(let m=0;m<curM;m++){
     const s=loadSaved(m,curY);
-    if(s) acc+=s.aho;
+    if(s) acc+=s.aho-(s.retiro||0);
   }
   // current live month
   const ing=sumCat('ing'),fij=sumCat('fij'),vari=sumCat('var'),deu=sumCat('deu');
@@ -665,26 +667,29 @@ function getAcumAho(){
   const pctV=gf('cfg-pct')||20;
   const ext=gf('cfg-ext');
   acc+=(ing-gas)*(pctV/100)+ext;
+  acc-=gf('cfg-retiro');
   return acc;
 }
 
-function buildAnnual(ingL,gasL,fijL,varL,deuL,presL,ahoL,extraacum,pctV,extL){
+function buildAnnual(ingL,gasL,fijL,varL,deuL,presL,ahoL,extraacum,pctV,extL,retiroL){
   const ingA=[],gasA=[],presA=[],ahoA=[];
-  let acIng=0,acGas=0,acAho=0,acFij=0,acVar=0,acDeu=0;
+  let acIng=0,acGas=0,acAho=0,acFij=0,acVar=0,acDeu=0,acRet=0;
   for(let m=0;m<12;m++){
-    let i=0,g=0,p=0,a=0,mf=0,mv=0,md=0;
-    if(m===curM){i=ingL;g=gasL;p=presL;a=ahoL;mf=fijL;mv=varL;md=deuL;}
-    else{const s=loadSaved(m,curY);if(s){i=s.ing;g=s.gas;p=s.pres;a=s.aho;mf=s.fij||0;mv=s.vari||0;md=s.deu||0;}}
+    let i=0,g=0,p=0,a=0,mf=0,mv=0,md=0,r=0;
+    if(m===curM){i=ingL;g=gasL;p=presL;a=ahoL;mf=fijL;mv=varL;md=deuL;r=retiroL||0;}
+    else{const s=loadSaved(m,curY);if(s){i=s.ing;g=s.gas;p=s.pres;a=s.aho;mf=s.fij||0;mv=s.vari||0;md=s.deu||0;r=s.retiro||0;}}
     ingA.push(i);gasA.push(g);presA.push(p);ahoA.push(a);
-    if(m<=curM){acIng+=i;acGas+=g;acAho+=a;acFij+=mf;acVar+=mv;acDeu+=md;}
+    if(m<=curM){acIng+=i;acGas+=g;acAho+=a;acFij+=mf;acVar+=mv;acDeu+=md;acRet+=r;}
   }
+  const acAhoNet=acAho-acRet;
   const mx=Math.max(acIng,1);
   $('ac-ing').textContent=fmts(acIng);$('ac-ing-b').style.width=clamp(acIng/mx*100,0,100)+'%';
   $('ac-gas').textContent=fmts(acGas);$('ac-gas-b').style.width=clamp(acGas/mx*100,0,100)+'%';
-  $('ac-aho').textContent=fmts(acAho);$('ac-aho-b').style.width=clamp(acAho/mx*100,0,100)+'%';
+  $('ac-aho').textContent=fmts(acAhoNet);$('ac-aho-b').style.width=clamp(acAhoNet/mx*100,0,100)+'%';
 
-  // Annual donut: acIng, acFij, acVar, acDeu, acAho
-  buildDonut('cDonutA','dl-legend-a',[acIng,acFij,acVar,acDeu,acAho]);
+  // Donut acumulado: el retiro reduce la tajada de Ahorro (no se suma a Deudas)
+  const acDisp=acIng-acGas-acAho;
+  buildDonut('cDonutA','dl-legend-a',[acDisp,acFij,acVar,acDeu,acAhoNet]);
 
   buildBar(ingA,gasA,presA);
   buildAho(ahoA);
@@ -1034,7 +1039,7 @@ function saveLocal(){
   ['ing','fij','var','deu'].forEach(cat=>{
     localStorage.setItem(skey(cat,curM,curY),JSON.stringify(getCatData(cat)));
   });
-  const cfg={pres:$('cfg-pres')?.value||'',pct:$('cfg-pct')?.value||'20',ext:$('cfg-ext')?.value||'',extraacum:$('cfg-extraacum')?.value||''};
+  const cfg={pres:$('cfg-pres')?.value||'',pct:$('cfg-pct')?.value||'20',ext:$('cfg-ext')?.value||'',retiro:$('cfg-retiro')?.value||'',extraacum:$('cfg-extraacum')?.value||''};
   localStorage.setItem(skey('cfg',curM,curY),JSON.stringify(cfg));
   const metas={m1n:$('m1-n')?.value||'',m1v:$('m1-v')?.value||'',m2n:$('m2-n')?.value||'',m2v:$('m2-v')?.value||'',m3n:$('m3-n')?.value||'',m3v:$('m3-v')?.value||''};
   localStorage.setItem('fin4_metas',JSON.stringify(metas));
@@ -1100,9 +1105,10 @@ function loadSaved(m,y){
     const gas=fij+vari+deu;
     const pct=parseFloat(cfg.pct)||20;
     const ext=parseFloat(cfg.ext)||0;
+    const retiro=parseFloat(cfg.retiro)||0;
     const pres=parseFloat(cfg.pres)||0;
     const aho=(ing-gas)*(pct/100)+ext;
-    return {ing,gas,fij,vari,deu,pres,pct,ext,aho};
+    return {ing,gas,fij,vari,deu,pres,pct,ext,aho,retiro};
   }catch(e){return null;}
 }
 
@@ -1123,6 +1129,7 @@ function loadMonth(m,y){
   if($('cfg-pres'))$('cfg-pres').value=cfg.pres||'';
   if($('cfg-pct'))$('cfg-pct').value=cfg.pct||'20';
   if($('cfg-ext'))$('cfg-ext').value=cfg.ext||'';
+  if($('cfg-retiro'))$('cfg-retiro').value=cfg.retiro||'';
   if($('cfg-extraacum'))$('cfg-extraacum').value=cfg.extraacum||'';
   const metas=JSON.parse(localStorage.getItem('fin4_metas')||'{}');
   ['m1-n','m1-v','m2-n','m2-v','m3-n','m3-v'].forEach(id=>{
