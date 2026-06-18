@@ -42,7 +42,7 @@ a{color:var(--purple)}
 
   <h2>1. Cómo empezar</h2>
   <ol>
-    <li>Abre la app desde su enlace web (puedes guardarla en la pantalla de inicio de tu celular, ver la sección 8).</li>
+    <li>Abre la app desde su enlace web (puedes guardarla en la pantalla de inicio de tu celular, ver la sección 11).</li>
     <li>Arriba a la derecha, pulsa el botón <strong>Google</strong> y luego <strong>Conectar con Google</strong>.</li>
     <li>Inicia sesión con tu cuenta. Acepta los permisos (la app solo podrá usar el archivo que ella misma crea y ver tu correo).</li>
     <li>Cuando estés conectado, arriba verás tu correo con un <span class="dot" style="background:var(--green)"></span>punto verde.</li>
@@ -55,6 +55,7 @@ a{color:var(--purple)}
     <span class="tag t-save">💾 Guardar</span> al terminar, para guardar en tu equipo y en tu Drive.</p>
   </div>
   <p>Regla de oro: <strong>Actualizar antes de empezar, Guardar al terminar.</strong> Así tus dos dispositivos siempre quedan con la misma información.</p>
+  <p>Si intentas <strong>Actualizar</strong> y la app detecta que tienes cambios locales recientes que aún no se subieron a Drive, te mostrará una advertencia antes de traer la copia de Drive — así evitas perder algo que hiciste y olvidaste guardar.</p>
 
   <h2>3. Elegir el mes y el año</h2>
   <p>Arriba eliges el <strong>mes</strong> y el <strong>año</strong> que quieres ver o llenar. Cada mes guarda sus propios datos por separado. La app abre en el mes y año actual automáticamente.</p>
@@ -62,16 +63,16 @@ a{color:var(--purple)}
   <h2>4. Ingresar tus datos</h2>
   <p>En la pestaña <strong>Ingresar datos</strong> encontrarás varias secciones. En cada una usa el botón <strong>+ Añadir</strong> para agregar las filas que necesites:</p>
   <ul>
-    <li><strong>Ingresos:</strong> tu sueldo y cualquier otra entrada de dinero del mes.</li>
-    <li><strong>Gastos fijos:</strong> los que se repiten (alquiler, servicios…).</li>
+    <li><strong>Ingresos:</strong> tu sueldo y cualquier otra entrada de dinero del mes. Justo debajo del total verás una fila en cursiva <strong>"↳ Disponible mes anterior"</strong>: es automática, no la editas tú — ver la sección 9.</li>
+    <li><strong>Gastos fijos:</strong> los que se repiten cada mes (alquiler, servicios…). Aquí solo los <strong>registras</strong> (nombre, número de orden y monto); el pago se hace después desde el Dashboard — ver la sección 7.</li>
     <li><strong>Gastos variables:</strong> los que cambian (comida, transporte…).</li>
-    <li><strong>Deudas:</strong> aquí solo las <strong>registras</strong> (nombre, número de orden y monto). El pago en sí se hace después, desde el Dashboard — ver la sección 7.</li>
+    <li><strong>Deudas:</strong> aquí solo las <strong>registras</strong> (nombre, número de orden y monto). El pago en sí se hace después, desde el Dashboard — ver la sección 8.</li>
   </ul>
 
   <h2>5. Ahorro y configuración</h2>
   <ul>
     <li><strong>Presupuesto mensual:</strong> cuánto planeas gastar (para comparar con lo real).</li>
-    <li><strong>% del remanente a ahorrar:</strong> qué porcentaje de lo que te queda (ingreso − gastos) quieres ahorrar. Puede ser distinto cada mes.</li>
+    <li><strong>% del remanente a ahorrar:</strong> qué porcentaje de lo que te queda quieres ahorrar. Ese remanente se calcula como <strong>Ingresos − Gastos fijos pagados − Gastos variables − Deudas pagadas</strong>. El "Disponible mes anterior" (ver sección 9) <strong>no</strong> entra en esta cuenta, para que no se le vuelva a aplicar el % de ahorro a dinero que ya pasó por ese cálculo el mes pasado. El porcentaje puede ser distinto cada mes.</li>
     <li><strong>Aportes extra al ahorro:</strong> montos adicionales que guardas ese mes (un bono, un regalo…). Puedes añadir varios con + Añadir.</li>
     <li><strong>Retiro de ahorros:</strong> dinero que sacas de tus ahorros. Reduce tu ahorro acumulado, sin afectar tu sueldo ni tu disponible del mes. Puedes añadir varios.</li>
   </ul>
@@ -86,7 +87,17 @@ a{color:var(--purple)}
   </ul>
   <p>Al pulsar <strong>Guardar</strong>, los números de orden se reacomodan solos a 1, 2, 3… No se permite repetir el mismo número en dos metas.</p>
 
-  <h2>7. Deudas (con prioridad y pago manual)</h2>
+  <h2>7. Gastos fijos (con prioridad y pago manual)</h2>
+  <p>Los gastos fijos (alquiler, luz, internet…) se escriben <strong>a mano cada mes</strong>, a diferencia de las deudas: <strong>no se arrastran</strong>. Al cambiar de mes, la lista queda vacía y vuelves a registrarlos.</p>
+  <ol>
+    <li>En <strong>Ingresar datos</strong> registras cada gasto fijo del mes: nombre, <strong>Nº de orden</strong> (prioridad) y monto.</li>
+    <li>Aparecen en el <strong>Dashboard</strong>, en la tarjeta "Gastos fijos", con su barra tipo termómetro y un botón <strong>Pagar</strong> — igual que las deudas.</li>
+    <li>Al pulsar <strong>Pagar</strong>, se resta del disponible del mes y queda marcado como <strong>"✓ Pagado"</strong> (con "deshacer" por si te equivocas).</li>
+    <li>Al pasar al siguiente mes, la lista se vacía y debes volver a escribir tus gastos fijos de ese mes.</li>
+  </ol>
+  <p>Igual que las deudas, se priorizan <strong>en cascada</strong> según su Nº de orden: el dinero disponible del mes se reparte primero al gasto fijo #1, lo que sobra va al #2, y así.</p>
+
+  <h2>8. Deudas (con prioridad y pago manual)</h2>
   <p>Las deudas funcionan distinto a los gastos fijos o variables: <strong>registrarlas no descuenta nada solo</strong>. Tienen su propio flujo:</p>
   <ol>
     <li>En <strong>Ingresar datos</strong> registras la deuda: nombre, <strong>Nº de orden</strong> (prioridad) y monto.</li>
@@ -96,22 +107,28 @@ a{color:var(--purple)}
   </ol>
   <p>Igual que las metas, las deudas se priorizan <strong>en cascada</strong> según su Nº de orden: el dinero disponible del mes se reparte primero a la deuda #1; si alcanza para pagarla completa, lo que sobra se ofrece a la #2, y así. La barra tipo termómetro de cada deuda te dice qué tan cerca estás de poder pagarla con el disponible actual.</p>
   <div class="box">
-    <p style="margin:0"><strong>Importante:</strong> las deudas <strong>nunca</strong> reducen tu % de ahorro — el ahorro se calcula solo con ingresos, gastos fijos y variables. Pagar una deuda únicamente reduce tu disponible del mes.</p>
+    <p style="margin:0"><strong>Importante:</strong> tu ahorro del mes se calcula sobre <strong>Ingresos − Gastos fijos pagados − Variables − Deudas pagadas</strong>. Es decir, pagar un gasto fijo o una deuda sí reduce la base sobre la que se aplica tu % de ahorro (porque reduce lo que realmente te queda disponible); pero el dinero en sí solo sale de tu disponible del mes, nunca de tus ahorros acumulados.</p>
   </div>
   <p>Al pulsar <strong>Guardar</strong>, los números de orden de las deudas activas (no pagadas) se reacomodan solos a 1, 2, 3…, igual que en las metas.</p>
 
-  <h2>8. El Dashboard (resumen visual)</h2>
+  <h2>9. El arrastre de tu disponible al mes siguiente</h2>
+  <p>Lo que te quede sin gastar al cerrar un mes (tu <strong>Disponible</strong>) no se pierde: pasa automáticamente como un ingreso más al mes siguiente. Lo verás como una fila en cursiva <strong>"↳ Disponible mes anterior"</strong> dentro de Ingresos, que tú no editas — la calcula la app.</p>
+  <div class="box">
+    <p style="margin:0"><strong>Importante:</strong> ese arrastre <strong>no</strong> se vuelve a contar para calcular tu % de ahorro del nuevo mes (ya pasó por ese cálculo el mes anterior). Sí se suma al total de ingresos y a tu disponible final, para que no desaparezca de tus cuentas — simplemente no se le aplica el % de ahorro otra vez.</p>
+  </div>
+
+  <h2>10. El Dashboard (resumen visual)</h2>
   <ul>
     <li><strong>Indicadores</strong> arriba: ingreso, presupuesto, gastos, disponible y ahorro del mes.</li>
-    <li><strong>Distribución mensual y acumulada:</strong> muestran cómo se reparte tu ingreso entre disponible, gastos, deudas pagadas y ahorro.</li>
+    <li><strong>Distribución mensual y acumulada:</strong> muestran cómo se reparte tu ingreso entre disponible, gastos fijos pagados, variables, deudas pagadas y ahorro.</li>
     <li><strong>Tabla anual:</strong> resumen mes por mes.</li>
     <li><strong>Metas:</strong> las barras de color con tu avance.</li>
-    <li><strong>Deudas:</strong> tarjeta con el botón Pagar y el avance de cada deuda (ver sección 7).</li>
+    <li><strong>Gastos fijos y Deudas:</strong> dos tarjetas lado a lado, cada una con su botón Pagar y el avance de cada concepto (ver secciones 7 y 8). Si tienes muchos, la tarjeta se vuelve desplazable verticalmente en lugar de alargar la página.</li>
     <li><strong>Me deben / por cobrar:</strong> para anotar lo que otros te deben.</li>
   </ul>
   <p>Arriba al centro verás <strong>"Último registro"</strong> con la fecha y hora del último guardado. Es la misma en todos tus dispositivos tras Actualizar.</p>
 
-  <h2>9. Usarla como app en el celular</h2>
+  <h2>11. Usarla como app en el celular</h2>
   <p>Abre el enlace en el navegador del celular y elige <strong>"Añadir a pantalla de inicio"</strong>:</p>
   <ul>
     <li><strong>Android (Chrome):</strong> menú ⋮ → "Añadir a la pantalla principal".</li>
@@ -119,10 +136,10 @@ a{color:var(--purple)}
   </ul>
   <p>Quedará con su ícono y a pantalla completa, como una app normal. Funciona incluso sin internet para llenar y guardar en el equipo; el internet solo hace falta para sincronizar con Drive.</p>
 
-  <h2>10. Respaldo manual (opcional)</h2>
+  <h2>12. Respaldo manual (opcional)</h2>
   <p>En el botón <strong>Google</strong> tienes <strong>⬇ Bajar copia</strong> (guarda un archivo con tus datos) y <strong>⬆ Restaurar copia</strong> (los vuelve a cargar). Útil como respaldo extra.</p>
 
-  <h2>11. Privacidad — en detalle</h2>
+  <h2>13. Privacidad — en detalle</h2>
   <p>Esta app no tiene servidores propios ni una base de datos central. Por eso:</p>
   <ul>
     <li>Cada usuario inicia sesión con <strong>su</strong> cuenta de Google y sus datos quedan en <strong>su</strong> propio Drive.</li>

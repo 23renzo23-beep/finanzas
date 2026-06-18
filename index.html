@@ -145,6 +145,9 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',syste
 /* DATOS TAB */
 .datos-wrap{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;align-items:start}
 .dtable{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.scrollbox{max-height:260px;overflow-y:auto}
+.scrollbox::-webkit-scrollbar{width:6px}
+.scrollbox::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 .dth{padding:10px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
 .dth-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .dth-lbl{font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--text2);text-transform:uppercase}
@@ -373,11 +376,15 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',syste
     </div>
   </div>
 
-  <!-- Fila 5: deudas -->
-  <div class="grid" style="grid-template-columns:1fr">
+  <!-- Fila 5: gastos fijos + deudas -->
+  <div class="grid" style="grid-template-columns:1fr 1fr">
+    <div class="card">
+      <div class="ct">GASTOS FIJOS</div>
+      <div id="fijos-blocks" class="scrollbox"><p style="font-size:11px;color:var(--muted2)">Registra tus gastos fijos del mes en Ingresar datos.</p></div>
+    </div>
     <div class="card">
       <div class="ct">DEUDAS</div>
-      <div id="deudas-blocks"><p style="font-size:11px;color:var(--muted2)">Configura tus deudas en Ingresar datos.</p></div>
+      <div id="deudas-blocks" class="scrollbox"><p style="font-size:11px;color:var(--muted2)">Configura tus deudas en Ingresar datos.</p></div>
     </div>
   </div>
 
@@ -401,13 +408,19 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',syste
     <!-- INGRESOS -->
     <div class="dtable" id="tbl-ing">
       <div class="dth"><div class="dth-dot" style="background:var(--blue)"></div><span class="dth-lbl">Ingresos</span><span class="dth-tot" style="color:var(--blue)" id="tot-ing">S/ 0</span></div>
+      <div class="drow" id="row-ing-carry" style="opacity:.85">
+        <span class="drow-lbl" style="font-style:italic">↳ Disponible mes anterior</span>
+        <span class="drow-inp ci" id="ing-carry-display" style="background:transparent;border:none;text-align:right;width:auto">S/ 0</span>
+      </div>
       <div class="drow-add"><button class="btn-add" onclick="addRow('tbl-ing','ing')">+ Añadir fila</button></div>
     </div>
 
     <!-- GASTOS FIJOS -->
     <div class="dtable" id="tbl-fij">
       <div class="dth"><div class="dth-dot" style="background:var(--blue)"></div><span class="dth-lbl">Gastos fijos</span><span class="dth-tot" style="color:var(--blue)" id="tot-fij">S/ 0</span></div>
-      <div class="drow-add"><button class="btn-add" onclick="addRow('tbl-fij','fij')">+ Añadir fila</button></div>
+      <div style="padding:8px 10px 0;font-size:9px;color:var(--muted)">Los escribes cada mes. Nombre · Nº de orden (prioridad) · monto. Se pagan desde el Dashboard con el botón Pagar.</div>
+      <div id="fijos-list" class="scrollbox" style="display:flex;flex-direction:column;padding:6px 10px 2px"></div>
+      <div class="drow-add"><button class="btn-add" onclick="addFijo()">+ Añadir gasto fijo</button></div>
     </div>
 
     <!-- GASTOS VARIABLES -->
@@ -420,7 +433,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',syste
     <div class="dtable" id="tbl-deu">
       <div class="dth"><div class="dth-dot" style="background:var(--red)"></div><span class="dth-lbl">Deudas</span><span class="dth-tot" style="color:var(--red)" id="tot-deu">S/ 0</span></div>
       <div style="padding:8px 10px 0;font-size:9px;color:var(--muted)">Nombre · Nº de orden (prioridad) · monto. Se pagan desde el Dashboard con el botón Pagar.</div>
-      <div id="deudas-list" style="display:flex;flex-direction:column;padding:6px 10px 2px"></div>
+      <div id="deudas-list" class="scrollbox" style="display:flex;flex-direction:column;padding:6px 10px 2px"></div>
       <div class="drow-add"><button class="btn-add" onclick="addDeuda()">+ Añadir deuda</button></div>
     </div>
 
@@ -537,13 +550,13 @@ const _now=new Date();
 let curM=_now.getMonth(), curY=String(_now.getFullYear());
 let _cBar=null, _cAho=null, _cDonut=null, _cDonutA=null;
 let mdRows=[];
-const cnts={ing:0,fij:0,var:0};
+const cnts={ing:0,var:0};
 const defLabels={
   ing:['Sueldo / salario','Ingreso extra 1','Ingreso extra 2'],
-  fij:['Alquiler / hipoteca','Servicios básicos','Internet / teléfono','Seguro / membresías'],
   var:['Alimentación','Transporte','Salud / farmacia','Ocio / entretenimiento','Ropa / personal']
 };
 let deudaRows=[]; // deudas globales: {id,n,v,p,fr:{m,y},pagadoEn:{m,y}|null}
+let fijoRows=[];  // gastos fijos del mes en curso: {id,n,v,p,pagado:boolean} — se reescriben cada mes
 
 const $=id=>document.getElementById(id);
 const fmts=n=>'S/ '+(Math.round(n*100)/100).toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -559,7 +572,7 @@ function addRow(tblId,cat,lbl='',val=''){
   const idx=cnts[cat]++;
   const rid=`${cat}-${idx}`;
   const defLbl=defLabels[cat]?defLabels[cat][idx]||'':'';
-  const colMap={ing:'ci',fij:'',var:''};
+  const colMap={ing:'ci',var:''};
   const div=document.createElement('div');
   div.className='drow'; div.id='row-'+rid;
   div.innerHTML=`
@@ -810,40 +823,171 @@ function buildDeudasDash(dispFinal){
   $('tot-deu').textContent=fmts(getDeudaPendienteGlobal());
 }
 
+/* ── GASTOS FIJOS (se escriben cada mes, prioridad en cascada, pago manual) ──
+   A diferencia de las deudas, los gastos fijos NO arrastran de un mes a otro:
+   cada mes la lista empieza vacía y se vuelven a registrar. En el mes, igual
+   que las deudas, no se debitan solos: solo al pulsar "Pagar" se restan del
+   disponible. */
+function sumFijoPagado(){
+  return fijoRows.filter(r=>r.pagado).reduce((a,r)=>a+(parseFloat(r.v)||0),0);
+}
+function sumFijoTotal(){
+  return fijoRows.reduce((a,r)=>a+(parseFloat(r.v)||0),0);
+}
+function getFijoData(){
+  return fijoRows.map(r=>({n:r.n,v:r.v,p:r.p,pagado:!!r.pagado}));
+}
+function addFijo(n='',v='',p='',pagado=false){
+  fijoRows.push({id:Date.now()+Math.random(),n,v:parseFloat(v)||0,p:parseInt(p)||0,pagado:!!pagado});
+  renderFijoInput();
+}
+function removeFijo(id){
+  fijoRows=fijoRows.filter(d=>d.id!==id);
+  renderFijoInput();
+}
+function syncFijo(id){
+  const r=fijoRows.find(d=>d.id===id);
+  if(!r) return;
+  r.n=$('fn-'+id)?.value||'';
+  r.v=parseFloat($('fv-'+id)?.value)||0;
+  r.p=parseInt($('fp-'+id)?.value)||0;
+  recalc();
+}
+function validaPrioFijo(id){
+  const r=fijoRows.find(d=>d.id===id);
+  if(!r||!r.p) return;
+  const dup=fijoRows.some(o=>o.id!==id && o.p===r.p);
+  if(dup){ showToast('El orden '+r.p+' ya está usado en otro gasto fijo'); r.p=0; renderFijoInput(); }
+}
+function normalizeFijoPrios(){
+  const pend=fijoRows.filter(d=>d.p>0);
+  pend.sort((a,b)=>a.p-b.p);
+  pend.forEach((d,i)=>{ d.p=i+1; });
+  renderFijoInput();
+}
+function pagarFijo(id){
+  const r=fijoRows.find(d=>d.id===id);
+  if(!r||r.pagado) return;
+  r.pagado=true;
+  recalc();
+  showToast('✓ '+(r.n||'Gasto fijo')+' pagado — no olvides presionar Guardar');
+}
+function deshacerPagoFijo(id){
+  const r=fijoRows.find(d=>d.id===id);
+  if(!r) return;
+  r.pagado=false;
+  recalc();
+}
+function renderFijoInput(){
+  const list=$('fijos-list'); if(!list) return;
+  list.innerHTML=fijoRows.length?fijoRows.map(r=>{
+    const estado=r.pagado?'Pagado este mes':'Pendiente este mes';
+    return `<div style="display:flex;flex-direction:column;gap:3px;padding:6px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;gap:5px;align-items:center">
+        <input class="md-inp" id="fn-${r.id}" type="text" placeholder="Nombre del gasto fijo" value="${r.n||''}" oninput="syncFijo(${r.id})" style="flex:1">
+        <input class="md-inp" id="fp-${r.id}" type="number" min="1" placeholder="Nº" value="${r.p||''}" oninput="syncFijo(${r.id})" onchange="validaPrioFijo(${r.id})" style="width:40px;text-align:center;color:var(--purple)" title="Orden / prioridad (1 = primera, sin repetir)">
+        <input class="md-inp" id="fv-${r.id}" type="number" placeholder="S/" value="${r.v||''}" oninput="syncFijo(${r.id})" style="width:66px;text-align:right;color:var(--blue)">
+        <button onclick="removeFijo(${r.id})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:0 2px;flex-shrink:0">×</button>
+      </div>
+      <div style="font-size:9px;color:${r.pagado?'#3dd68c':'var(--muted2)'};padding-left:2px">${estado}${r.pagado?` · <span style="cursor:pointer;text-decoration:underline" onclick="deshacerPagoFijo(${r.id})">deshacer</span>`:''}</div>
+    </div>`;
+  }).join(''):'<p style="font-size:11px;color:var(--muted2)">Aún no has registrado gastos fijos este mes. Usa + Añadir gasto fijo.</p>';
+  recalc();
+}
+function buildFijosDash(poolInicial){
+  const pendientes=fijoRows.filter(d=>!d.pagado);
+  const pagados=fijoRows.filter(d=>d.pagado);
+  pendientes.sort((a,b)=>{const pa=a.p>0?a.p:Infinity,pb=b.p>0?b.p:Infinity; return pa-pb;});
+  let remaining=Math.max(poolInicial,0);
+  const cardsPend=pendientes.map(d=>{
+    const v=parseFloat(d.v)||0;
+    const alloc=Math.min(Math.max(remaining,0),v);
+    remaining-=alloc;
+    const ratio=v>0?alloc/v:0;
+    const prog=ratio*100;
+    const puede=v>0&&alloc>=v;
+    const hue=Math.round(ratio*120);
+    const col=`hsl(${hue},70%,47%)`;
+    const orden=d.p>0?`#${d.p} · `:'';
+    return `<div class="goal">
+      <div class="gh"><span class="gname">${orden}${d.n||'Gasto fijo'}</span><span class="gpct" style="color:${col}">${prog.toFixed(0)}%</span></div>
+      <div class="gtrack"><div class="gfill" style="width:${prog}%;background:${col};transition:width .4s,background .4s"></div></div>
+      <div class="gfoot">
+        <span class="gacum" style="color:${puede?'#3dd68c':'var(--muted2)'}">${fmts(v)}${puede?' · ✓ ya puedes pagarlo':' · falta disponible'}</span>
+        <button class="save-btn" style="padding:3px 9px;font-size:10px" onclick="pagarFijo(${d.id})">Pagar</button>
+      </div>
+    </div>`;
+  }).join('');
+  const cardsPag=pagados.map(d=>`
+    <div class="goal" style="opacity:.7">
+      <div class="gh"><span class="gname">${d.p>0?'#'+d.p+' · ':''}${d.n||'Gasto fijo'}</span><span class="gpct" style="color:#3dd68c">✓ Pagado</span></div>
+      <div class="gfoot"><span class="gacum">${fmts(d.v)}</span><button class="save-btn act" style="padding:3px 9px;font-size:10px" onclick="deshacerPagoFijo(${d.id})">Deshacer</button></div>
+    </div>`).join('');
+  const intro=fijoRows.length?`<div style="font-size:9px;color:var(--muted2);margin-bottom:8px">Disponible este mes para pagar gastos fijos: <strong style="color:var(--text)">${fmts(Math.max(poolInicial,0))}</strong></div>`:'';
+  const html=intro+cardsPend+cardsPag;
+  $('fijos-blocks').innerHTML=html||'<p style="font-size:11px;color:var(--muted2)">Registra tus gastos fijos del mes en Ingresar datos.</p>';
+  $('tot-fij').textContent=fmts(sumFijoTotal());
+}
+
+/* ── DISPONIBLE QUE SE ARRASTRA AL SIGUIENTE MES ──
+   El disponible final de un mes (ya restado el ahorro) pasa como "ingreso"
+   automático al mes siguiente, y así se va acumulando. Para que el % de
+   ahorro no se vuelva a aplicar sobre ese dinero ya "tratado" el mes
+   anterior, el arrastre se EXCLUYE de la base que calcula el % de ahorro
+   (igual que los aportes extra), pero SÍ se suma al total de ingresos y al
+   disponible final mostrado. */
+function prevMonthYear(m,y){
+  return m===0 ? {m:11,y:String(parseInt(y)-1)} : {m:m-1,y};
+}
+function hasMonthData(m,y){
+  return localStorage.getItem(skey('ing',m,y))!==null
+      || localStorage.getItem(skey('fij',m,y))!==null
+      || localStorage.getItem(skey('var',m,y))!==null
+      || localStorage.getItem(skey('cfg',m,y))!==null;
+}
+function getDisponibleAnterior(m,y){
+  const pv=prevMonthYear(m,y);
+  if(!hasMonthData(pv.m,pv.y)) return 0;
+  const s=loadSaved(pv.m,pv.y);
+  return s?(s.disp||0):0;
+}
+
 /* ── RECALC ── */
 function recalc(){
-  const ing=sumCat('ing'), fij=sumCat('fij'), vari=sumCat('var');
-  const deu=deudaPagadaEnMes(curM,curY); // deudas PAGADAS este mes (ya no se debitan automáticamente)
-  const gasBase=fij+vari;     // gasto fijo+variable; las deudas no afectan el % de ahorro
-  const gas=gasBase+deu;      // gasto total real (para KPIs, presupuesto y gráficos)
+  const ingBase=sumCat('ing'), vari=sumCat('var');
+  const carryover=getDisponibleAnterior(curM,curY); // disponible final del mes anterior
+  const ingTotal=ingBase+carryover;                 // esto es lo que se muestra como "Ingresos"
+  const fijPag=sumFijoPagado();      // gastos fijos PAGADOS este mes (ya no se debitan automáticamente)
+  const deu=deudaPagadaEnMes(curM,curY); // deudas PAGADAS este mes
+  const gas=fijPag+vari+deu;         // gasto total real (para KPIs, presupuesto y gráficos)
   const pctV=gf('cfg-pct')||20;
   const pres=gf('cfg-pres');
   const aex=sumAex();
   const retiro=sumRet();
-  const rem=ing-gasBase;
-  const aho=rem*(pctV/100)+aex;
-  const disp=ing-gas-aho;
+  const remBase=ingBase-fijPag-vari-deu; // base del % de ahorro: el arrastre del mes anterior NO se vuelve a "tasar"
+  const aho=remBase*(pctV/100)+aex;
+  const disp=ingTotal-gas-aho;        // disponible final (sí incluye el arrastre)
 
   // Table totals
-  $('tot-ing').textContent=fmts(ing);
-  $('tot-fij').textContent=fmts(fij);
+  $('tot-ing').textContent=fmts(ingTotal);
   $('tot-var').textContent=fmts(vari);
+  if($('ing-carry-display')) $('ing-carry-display').textContent=fmts(carryover);
 
   // KPIs
   $('lbl-mes').textContent=MN[curM]+' '+curY;
-  $('k-ing').textContent=fmts(ing);
+  $('k-ing').textContent=fmts(ingTotal);
   $('k-pres').textContent=fmts(pres);
   $('k-gas').textContent=fmts(gas);
-  $('k-gas-s').textContent=pcts(gas,ing)+' del ingreso';
+  $('k-gas-s').textContent=pcts(gas,ingTotal)+' del ingreso';
   $('k-disp').textContent=fmts(disp);
-  $('k-disp-s').textContent='ing − gastos − ahorro';
+  $('k-disp-s').textContent='ing − fijos − variables − deudas − ahorro';
   $('k-aho').textContent=fmts(aho);
   $('k-aho-s').textContent=pctV+'% remanente + extra';
   $('k-gas2').textContent=fmts(gas);
 
   // Desglose bars
   const cats2=[
-    {l:'Gastos fijos',v:fij,c:'var(--blue)',h:'#5b8dee'},
+    {l:'Fijos pagados',v:fijPag,c:'var(--blue)',h:'#5b8dee'},
     {l:'Gastos variables',v:vari,c:'var(--amber)',h:'#f5a623'},
     {l:'Deudas pagadas',v:deu,c:'var(--red)',h:'#f06a6a'}
   ];
@@ -857,12 +1001,12 @@ function recalc(){
     </div>`).join('');
 
   // Monthly donut: ing, fij, vari, deu, aho
-  buildDonut('cDonut','dl-legend',[disp,fij,vari,deu,aho]);
+  buildDonut('cDonut','dl-legend',[disp,fijPag,vari,deu,aho]);
 
   // Ahorro panel
   $('ah-disp').textContent=fmts(disp);
   $('ah-pct-lbl').textContent=pctV+'% a ahorro';
-  $('ah-calc').textContent=fmts(rem*pctV/100);
+  $('ah-calc').textContent=fmts(remBase*pctV/100);
   $('ah-ext').textContent=fmts(aex);
   $('ah-total').textContent=fmts(aho);
 
@@ -878,15 +1022,18 @@ function recalc(){
   $('rv-bar').style.background=pp>100?'var(--red)':pp>85?'var(--amber)':'var(--green)';
 
   // Annual
-  buildAnnual(ing,gas,fij,vari,deu,pres,aho,retiro);
+  buildAnnual(ingTotal,gas,fijPag,vari,deu,pres,aho,retiro,ingBase);
 
   // Metas
   const totalReal=getAcumAho();
   $('k-acum').textContent=fmts(totalReal);
   buildMetas(totalReal);
 
-  // Deudas (dashboard con prioridad/cascada)
-  buildDeudasDash(disp);
+  // Gastos fijos (dashboard con prioridad/cascada): se pagan primero, con todo el ingreso del mes como bolsa
+  buildFijosDash(ingTotal);
+
+  // Deudas (dashboard con prioridad/cascada): la bolsa es lo que queda tras fijos pagados y variables
+  buildDeudasDash(ingTotal-fijPag-vari);
 
   // Me deben dashboard
   renderMeDebenDash();
@@ -898,25 +1045,30 @@ function getAcumAho(){
     const s=loadSaved(m,curY);
     if(s) acc+=s.aho-(s.retiro||0);
   }
-  // current live month (las deudas no afectan el ahorro)
-  const ing=sumCat('ing'),fij=sumCat('fij'),vari=sumCat('var');
-  const gasBase=fij+vari;
+  // current live month (misma fórmula que recalc, sin contar el arrastre del mes anterior)
+  const ingBase=sumCat('ing'),vari=sumCat('var');
+  const fijPag=sumFijoPagado();
+  const deu=deudaPagadaEnMes(curM,curY);
+  const remBase=ingBase-fijPag-vari-deu;
   const pctV=gf('cfg-pct')||20;
   const aex=sumAex();
-  acc+=(ing-gasBase)*(pctV/100)+aex;
+  acc+=remBase*(pctV/100)+aex;
   acc-=sumRet();
   return acc;
 }
 
-function buildAnnual(ingL,gasL,fijL,varL,deuL,presL,ahoL,retiroL){
+function buildAnnual(ingL,gasL,fijL,varL,deuL,presL,ahoL,retiroL,ingBaseL){
   const ingA=[],gasA=[],presA=[],ahoA=[];
   let acIng=0,acGas=0,acAho=0,acFij=0,acVar=0,acDeu=0,acRet=0;
   for(let m=0;m<12;m++){
-    let i=0,g=0,p=0,a=0,mf=0,mv=0,md=0,r=0;
-    if(m===curM){i=ingL;g=gasL;p=presL;a=ahoL;mf=fijL;mv=varL;md=deuL;r=retiroL||0;}
-    else{const s=loadSaved(m,curY);if(s){i=s.ing;g=s.gas;p=s.pres;a=s.aho;mf=s.fij||0;mv=s.vari||0;md=s.deu||0;r=s.retiro||0;}}
+    let i=0,g=0,p=0,a=0,mf=0,mv=0,md=0,r=0,ib=0;
+    if(m===curM){i=ingL;g=gasL;p=presL;a=ahoL;mf=fijL;mv=varL;md=deuL;r=retiroL||0;ib=ingBaseL||0;}
+    else{const s=loadSaved(m,curY);if(s){i=s.ing;g=s.gas;p=s.pres;a=s.aho;mf=s.fij||0;mv=s.vari||0;md=s.deu||0;r=s.retiro||0;ib=s.ingBase||0;}}
     ingA.push(i);gasA.push(g);presA.push(p);ahoA.push(a);
-    if(m<=curM){acIng+=i;acGas+=g;acAho+=a;acFij+=mf;acVar+=mv;acDeu+=md;acRet+=r;}
+    // acIng suma solo el ingreso NUEVO de cada mes (ib), nunca el total con arrastre (i):
+    // el arrastre de un mes ya está contenido en el ingreso nuevo de meses anteriores, así
+    // que sumar "i" mes a mes contaría ese dinero varias veces (una por cada mes que arrastra).
+    if(m<=curM){acIng+=ib;acGas+=g;acAho+=a;acFij+=mf;acVar+=mv;acDeu+=md;acRet+=r;}
   }
   const acAhoNet=acAho-acRet;
   const mx=Math.max(acIng,1);
@@ -924,8 +1076,10 @@ function buildAnnual(ingL,gasL,fijL,varL,deuL,presL,ahoL,retiroL){
   $('ac-gas').textContent=fmts(acGas);$('ac-gas-b').style.width=clamp(acGas/mx*100,0,100)+'%';
   $('ac-aho').textContent=fmts(acAhoNet);$('ac-aho-b').style.width=clamp(acAhoNet/mx*100,0,100)+'%';
 
-  // Donut acumulado: el retiro reduce la tajada de Ahorro (no se suma a Deudas)
-  const acDisp=acIng-acGas-acAho;
+  // Donut acumulado: "Disponible" es el saldo actual (disponible del mes en curso), no una
+  // suma de disponibles mensuales — el disponible es un saldo que ya arrastra todo lo anterior,
+  // sumarlo mes a mes lo contaría repetidas veces (igual que con los ingresos).
+  const acDisp=ingL-gasL-ahoL;
   buildDonut('cDonutA','dl-legend-a',[acDisp,acFij,acVar,acDeu,acAhoNet]);
 
   buildBar(ingA,gasA,presA);
@@ -1151,7 +1305,7 @@ const GOOGLE_CLIENT_ID = "290368044131-4djfgvp09up0uf5s37hq904mlv1pf43c.apps.goo
 const DRIVE_SCOPE='https://www.googleapis.com/auth/drive.file';
 const SCOPES=DRIVE_SCOPE+' https://www.googleapis.com/auth/userinfo.email';
 const DRIVE_FILENAME='finanzas_dashboard_db.json';
-let _gToken=null, _gTokenClient=null, _gFileId=null, _gEmail=null;
+let _gToken=null, _gTokenClient=null, _gFileId=null, _gEmail=null, _gFileModifiedTime=null;
 
 function driveCfg(){ try{return JSON.parse(localStorage.getItem('fin4_drivecfg')||'{}');}catch(e){return {};} }
 function setDriveCfg(o){ localStorage.setItem('fin4_drivecfg',JSON.stringify({...driveCfg(),...o})); }
@@ -1241,6 +1395,7 @@ async function driveLocateFile(){
   const r=await driveApi(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive&fields=files(id,name,modifiedTime)&orderBy=modifiedTime desc`);
   const j=await r.json();
   _gFileId=(j.files&&j.files[0])?j.files[0].id:null;
+  _gFileModifiedTime=(j.files&&j.files[0])?j.files[0].modifiedTime:null;
   return _gFileId;
 }
 // Sube los datos actuales a Drive (crea el archivo si no existe). Devuelve promesa.
@@ -1256,12 +1411,29 @@ async function drivePush(){
     : `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id`;
   const r=await driveApi(url,{method,headers:{'Content-Type':'multipart/related; boundary='+boundary},body:multipart});
   const j=await r.json(); if(j.id) _gFileId=j.id;
+  _gFileModifiedTime=new Date().toISOString(); // ya quedó al día con lo que acabamos de subir
   setDriveCfg({lastSave:new Date().toISOString()});
 }
 // Trae los datos de Drive y los aplica. Devuelve 'ok' | 'empty' | 'cancel'.
-async function drivePull({silent=false}={}){
+async function drivePull({silent=false,force=false}={}){
   if(!_gFileId) await driveLocateFile();
   if(!_gFileId) return 'empty';
+  if(!force){
+    try{
+      const mr=await driveApi(`https://www.googleapis.com/drive/v3/files/${_gFileId}?fields=modifiedTime`);
+      const mj=await mr.json();
+      if(mj.modifiedTime) _gFileModifiedTime=mj.modifiedTime;
+      const localIso=localStorage.getItem('fin4_lastsave');
+      if(localIso && _gFileModifiedTime){
+        const localTime=new Date(localIso).getTime();
+        const driveTime=new Date(_gFileModifiedTime).getTime();
+        if(localTime>driveTime+5000){ // margen de 5s por desfases de reloj
+          const ok=confirm('Tienes cambios guardados en este equipo más recientes que tu copia en Drive (puede que el último "Guardar" no haya llegado a subirse). Si actualizas ahora, esos cambios locales se perderán y se reemplazarán por la copia de Drive.\n\n¿Seguro que quieres continuar?');
+          if(!ok) return 'cancel';
+        }
+      }
+    }catch(e){ /* si la verificación falla, seguir igual que antes */ }
+  }
   const r=await driveApi(`https://www.googleapis.com/drive/v3/files/${_gFileId}?alt=media`);
   const data=await r.json();
   return applyData(data,{silent}) ? 'ok' : 'cancel';
@@ -1281,9 +1453,10 @@ function driveTryAutoConnect(){
 
 /* ── STORAGE ── */
 function saveLocal(){
-  ['ing','fij','var'].forEach(cat=>{
+  ['ing','var'].forEach(cat=>{
     localStorage.setItem(skey(cat,curM,curY),JSON.stringify(getCatData(cat)));
   });
+  localStorage.setItem(skey('fij',curM,curY),JSON.stringify(getFijoData()));
   localStorage.setItem(skey('aex',curM,curY),JSON.stringify(getAexData()));
   localStorage.setItem(skey('ret',curM,curY),JSON.stringify(getRetData()));
   const cfg={pres:$('cfg-pres')?.value||'',pct:$('cfg-pct')?.value||'20'};
@@ -1307,6 +1480,7 @@ function showToast(txt){ const t=$('toast'); t.textContent=txt; t.classList.add(
 async function guardar(){
   normalizeMetaPrios();
   normalizeDeudaPrios();
+  normalizeFijoPrios();
   recalc();
   saveLocal();
   const b=$('btnSave');
@@ -1354,39 +1528,48 @@ async function actualizar(){
 function loadSaved(m,y){
   try{
     const ir=JSON.parse(localStorage.getItem(skey('ing',m,y))||'[]');
-    const fr=JSON.parse(localStorage.getItem(skey('fij',m,y))||'[]');
+    const fijArr=JSON.parse(localStorage.getItem(skey('fij',m,y))||'[]');
     const vr=JSON.parse(localStorage.getItem(skey('var',m,y))||'[]');
     const cfg=JSON.parse(localStorage.getItem(skey('cfg',m,y))||'{}');
-    const ing=ir.reduce((a,r)=>a+r.val,0);
-    const fij=fr.reduce((a,r)=>a+r.val,0);
+    const ingBase=ir.reduce((a,r)=>a+r.val,0);
+    const fijPag=fijArr.filter(r=>r.pagado).reduce((a,r)=>a+(parseFloat(r.v)||0),0);
     const vari=vr.reduce((a,r)=>a+r.val,0);
-    const gasBase=fij+vari;
     const deu=deudaPagadaEnMes(m,y); // deudas pagadas ese mes (registro global, con arrastre)
-    const gas=gasBase+deu;
+    const carryover=getDisponibleAnterior(m,y); // disponible final del mes anterior
+    const ing=ingBase+carryover;
+    const gas=fijPag+vari+deu;
     const pct=parseFloat(cfg.pct)||20;
     const aexArr=JSON.parse(localStorage.getItem(skey('aex',m,y))||'null');
     const aex=(aexArr&&aexArr.length) ? aexArr.reduce((a,r)=>a+(parseFloat(r.val)||0),0) : (parseFloat(cfg.ext)||0);
     const retArr=JSON.parse(localStorage.getItem(skey('ret',m,y))||'null');
     const retiro=(retArr&&retArr.length) ? retArr.reduce((a,r)=>a+(parseFloat(r.val)||0),0) : (parseFloat(cfg.retiro)||0);
     const pres=parseFloat(cfg.pres)||0;
-    const aho=(ing-gasBase)*(pct/100)+aex;
-    return {ing,gas,fij,vari,deu,pres,pct,aex,aho,retiro};
+    const remBase=ingBase-fijPag-vari-deu; // el arrastre no entra en la base del % de ahorro
+    const aho=remBase*(pct/100)+aex;
+    const disp=ing-gas-aho;
+    return {ing,ingBase,gas,fij:fijPag,vari,deu,pres,pct,aex,aho,retiro,disp};
   }catch(e){return null;}
 }
 
 function loadMonth(m,y){
-  ['ing','fij','var'].forEach(cat=>{
+  ['ing','var'].forEach(cat=>{
     cnts[cat]=0;
     const tbl=$('tbl-'+cat);
-    tbl.querySelectorAll('.drow').forEach(r=>r.remove());
+    tbl.querySelectorAll('.drow').forEach(r=>{ if(r.id!=='row-ing-carry') r.remove(); });
     const saved=JSON.parse(localStorage.getItem(skey(cat,m,y))||'null');
     if(saved&&saved.length){
       saved.forEach(r=>addRow('tbl-'+cat,cat,r.lbl,r.val));
     } else {
-      const defs={ing:['Sueldo / salario'],fij:['Alquiler / hipoteca','Servicios básicos'],var:['Alimentación','Transporte']};
+      const defs={ing:['Sueldo / salario'],var:['Alimentación','Transporte']};
       (defs[cat]||[]).forEach(lbl=>addRow('tbl-'+cat,cat,lbl,''));
     }
   });
+  // gastos fijos del mes (se escriben cada mes, no arrastran al siguiente)
+  try{
+    const fijArr=JSON.parse(localStorage.getItem(skey('fij',m,y))||'[]');
+    fijoRows=fijArr.map(r=>({id:Date.now()+Math.random(),n:r.n,v:parseFloat(r.v)||0,p:parseInt(r.p)||0,pagado:!!r.pagado}));
+  }catch(e){ fijoRows=[]; }
+  renderFijoInput();
   const cfg=JSON.parse(localStorage.getItem(skey('cfg',m,y))||'{}');
   if($('cfg-pres'))$('cfg-pres').value=cfg.pres||'';
   if($('cfg-pct'))$('cfg-pct').value=cfg.pct||'20';
