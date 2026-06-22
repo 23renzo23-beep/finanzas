@@ -959,10 +959,20 @@ function hasMonthData(m,y){
       || localStorage.getItem(skey('cfg',m,y))!==null;
 }
 function getDisponibleAnterior(m,y){
-  const pv=prevMonthYear(m,y);
-  if(!hasMonthData(pv.m,pv.y)) return 0;
-  const s=loadSaved(pv.m,pv.y);
-  return s?(s.disp||0):0;
+  // Busca, retrocediendo mes a mes, el mes más reciente ANTES de (m,y) que sí tenga datos
+  // guardados — saltando cualquier mes vacío en el camino (p.ej. un mes que nunca abriste).
+  // Si pasan 24 meses seguidos sin datos, asumimos que ya no hay más historial y paramos
+  // (evita recorrer años vacíos en cada recálculo).
+  let cm=m, cy=y, miss=0;
+  while(miss<24){
+    const pv=prevMonthYear(cm,cy);
+    if(hasMonthData(pv.m,pv.y)){
+      const s=loadSaved(pv.m,pv.y);
+      return s?(s.disp||0):0;
+    }
+    miss++; cm=pv.m; cy=pv.y;
+  }
+  return 0;
 }
 
 /* ── RECALC ── */
@@ -1054,13 +1064,18 @@ function recalc(){
 
 function getAcumAho(){
   let acc=0;
-  // recorrer hacia atrás mes a mes, cruzando años, mientras exista data guardada
-  let m=curM, y=curY;
-  while(true){
+  // recorrer hacia atrás mes a mes, cruzando años, saltando huecos (meses nunca guardados).
+  // Si pasan 24 meses seguidos sin datos, asumimos que ya no hay más historial y paramos.
+  let m=curM, y=curY, miss=0;
+  while(miss<24){
     const pv=prevMonthYear(m,y);
-    if(!hasMonthData(pv.m,pv.y)) break;
-    const s=loadSaved(pv.m,pv.y);
-    if(s) acc+=s.aho-(s.retiro||0);
+    if(hasMonthData(pv.m,pv.y)){
+      miss=0;
+      const s=loadSaved(pv.m,pv.y);
+      if(s) acc+=s.aho-(s.retiro||0);
+    } else {
+      miss++;
+    }
     m=pv.m; y=pv.y;
   }
   // current live month (misma fórmula que recalc, sin contar el arrastre del mes anterior)
