@@ -248,6 +248,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',syste
   </div>
   <div class="last-save" id="lastSave" title="Última vez que se guardaron datos"></div>
   <div class="top-right">
+    <button class="save-btn" onclick="cambiarMes(-1)" title="Mes anterior" style="padding:4px 9px">◀</button>
     <select class="sel" id="selMes">
       <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option>
       <option value="3">Abril</option><option value="4">Mayo</option><option value="5" selected>Junio</option>
@@ -255,6 +256,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',syste
       <option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
     </select>
     <input class="sel-year" id="selAno" type="number" value="2025" min="2020" max="2099">
+    <button class="save-btn" onclick="cambiarMes(1)" title="Mes siguiente" style="padding:4px 9px">▶</button>
     <div class="sep"></div>
     <button class="drive-pill" id="drivePill" onclick="openDrive()" title="Tu cuenta de Google y sincronización"><span class="drive-dot" id="driveDot"></span><span id="driveLbl">Google</span></button>
     <div class="sep"></div>
@@ -281,7 +283,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',syste
     <div class="kpi kred"><div class="kl">GASTOS TOTALES</div><div class="kv" id="k-gas">S/ 0</div><div class="ks" id="k-gas-s">—</div></div>
     <div class="kpi kgreen"><div class="kl">DISPONIBLE</div><div class="kv" id="k-disp">S/ 0</div><div class="ks" id="k-disp-s">ing − gastos − ahorro</div></div>
     <div class="kpi kamber"><div class="kl">AHORRO DEL MES</div><div class="kv" id="k-aho">S/ 0</div><div class="ks" id="k-aho-s">—</div></div>
-    <div class="kpi kpurple"><div class="kl">AHORRO ACUMULADO</div><div class="kv" id="k-acum">S/ 0</div><div class="ks">año en curso</div></div>
+    <div class="kpi kpurple"><div class="kl">AHORRO ACUMULADO</div><div class="kv" id="k-acum">S/ 0</div><div class="ks">desde que empezaste a usar la app</div></div>
   </div>
 
   <!-- Fila 2: desglose + donut mensual + donut acumulado + ahorro -->
@@ -412,6 +414,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',syste
         <span class="drow-lbl" style="font-style:italic">↳ Disponible mes anterior</span>
         <span class="drow-inp ci" id="ing-carry-display" style="background:transparent;border:none;text-align:right;width:auto">S/ 0</span>
       </div>
+      <div id="rows-ing" class="scrollbox" style="display:flex;flex-direction:column"></div>
       <div class="drow-add"><button class="btn-add" onclick="addRow('tbl-ing','ing')">+ Añadir fila</button></div>
     </div>
 
@@ -426,6 +429,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',syste
     <!-- GASTOS VARIABLES -->
     <div class="dtable" id="tbl-var">
       <div class="dth"><div class="dth-dot" style="background:var(--amber)"></div><span class="dth-lbl">Gastos variables</span><span class="dth-tot" style="color:var(--amber)" id="tot-var">S/ 0</span></div>
+      <div id="rows-var" class="scrollbox" style="display:flex;flex-direction:column"></div>
       <div class="drow-add"><button class="btn-add" onclick="addRow('tbl-var','var')">+ Añadir fila</button></div>
     </div>
 
@@ -444,18 +448,18 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',syste
       <div class="drow"><span class="drow-lbl">% del remanente a ahorrar</span><input class="drow-inp ca" id="cfg-pct" type="number" placeholder="20" min="0" max="100" oninput="recalc()"></div>
       <div style="padding:8px 12px 4px;border-top:1px solid var(--border)">
         <div style="font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--muted2);text-transform:uppercase;margin-bottom:8px">Aportes extra al ahorro</div>
-        <div id="aex-list" style="display:flex;flex-direction:column;gap:5px"></div>
+        <div id="aex-list" class="scrollbox" style="display:flex;flex-direction:column;gap:5px"></div>
         <button class="btn-add" style="margin-top:6px;width:100%" onclick="addAex()">+ Añadir aporte</button>
       </div>
       <div style="padding:8px 12px 4px;border-top:1px solid var(--border)">
         <div style="font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--muted2);text-transform:uppercase;margin-bottom:8px">Retiro de ahorros</div>
-        <div id="ret-list" style="display:flex;flex-direction:column;gap:5px"></div>
+        <div id="ret-list" class="scrollbox" style="display:flex;flex-direction:column;gap:5px"></div>
         <button class="btn-add" style="margin-top:6px;width:100%" onclick="addRet()">+ Añadir retiro</button>
       </div>
       <div style="padding:8px 12px;border-top:1px solid var(--border)">
         <div style="font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--muted2);text-transform:uppercase;margin-bottom:6px">Metas de ahorro</div>
         <div style="font-size:9px;color:var(--muted);margin-bottom:8px">Nombre · Nº de orden · monto. Se llenan en el orden que pongas (1 primero).</div>
-        <div id="metas-list" style="display:flex;flex-direction:column;gap:5px"></div>
+        <div id="metas-list" class="scrollbox" style="display:flex;flex-direction:column;gap:5px"></div>
         <button class="btn-add" style="margin-top:6px;width:100%" onclick="addMeta()">+ Añadir meta</button>
       </div>
     </div>
@@ -568,6 +572,7 @@ const skey=(cat,m,y)=>`fin4_${y}_${m}_${cat}`;
 /* ── ROW MANAGEMENT ── */
 function addRow(tblId,cat,lbl='',val=''){
   const tbl=$(tblId);
+  const rowsWrap=$('rows-'+cat);
   const addBtn=tbl.querySelector('.drow-add');
   const idx=cnts[cat]++;
   const rid=`${cat}-${idx}`;
@@ -580,7 +585,7 @@ function addRow(tblId,cat,lbl='',val=''){
       id="lbl-${rid}" type="text" placeholder="${defLbl||'Concepto'}" value="${lbl}" oninput="recalc()">
     <input class="drow-inp ${colMap[cat]||''}" id="val-${rid}" type="number" placeholder="0" value="${val}" oninput="recalc()">
     <button onclick="removeRow('${rid}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:0 2px;flex-shrink:0">×</button>`;
-  tbl.insertBefore(div,addBtn);
+  if(rowsWrap) rowsWrap.appendChild(div); else tbl.insertBefore(div,addBtn);
   recalc();
 }
 function removeRow(rid){
@@ -768,13 +773,21 @@ function deshacerPagoDeuda(id){
   r.pagadoEn=null;
   recalc();
 }
+function setFrDeuda(id,m,y){
+  const r=deudaRows.find(d=>d.id===id);
+  if(!r) return;
+  r.fr={m:parseInt(m),y:String(parseInt(y))};
+  renderDeudaInput();
+}
 function renderDeudaInput(){
   const list=$('deudas-list'); if(!list) return;
   list.innerHTML=deudaRows.length?deudaRows.map(r=>{
     const fr=r.fr||{m:curM,y:curY};
+    const selM=`<select id="frM-${r.id}" onchange="setFrDeuda(${r.id},this.value,$('frY-${r.id}').value)" style="background:var(--bg2);color:var(--muted2);border:1px solid var(--border);border-radius:4px;font-size:9px;padding:1px 2px">${MN.map((mn,i)=>`<option value="${i}" ${i===fr.m?'selected':''}>${mn.slice(0,3)}</option>`).join('')}</select>`;
+    const selY=`<input id="frY-${r.id}" type="number" value="${fr.y}" onchange="setFrDeuda(${r.id},$('frM-${r.id}').value,this.value)" style="width:42px;background:var(--bg2);color:var(--muted2);border:1px solid var(--border);border-radius:4px;font-size:9px;padding:1px 2px;text-align:center">`;
     const estado=r.pagadoEn
       ?`Pagada · ${MN[r.pagadoEn.m].slice(0,3)} ${r.pagadoEn.y}`
-      :`Activa desde ${MN[fr.m].slice(0,3)} ${fr.y}`;
+      :`Activa desde ${selM} ${selY}`;
     return `<div style="display:flex;flex-direction:column;gap:3px;padding:6px 0;border-bottom:1px solid var(--border)">
       <div style="display:flex;gap:5px;align-items:center">
         <input class="md-inp" id="dn-${r.id}" type="text" placeholder="Nombre de la deuda" value="${r.n||''}" oninput="syncDeuda(${r.id})" style="flex:1">
@@ -782,7 +795,7 @@ function renderDeudaInput(){
         <input class="md-inp" id="dv-${r.id}" type="number" placeholder="S/" value="${r.v||''}" oninput="syncDeuda(${r.id})" style="width:66px;text-align:right;color:var(--red)">
         <button onclick="removeDeuda(${r.id})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:0 2px;flex-shrink:0">×</button>
       </div>
-      <div style="font-size:9px;color:${r.pagadoEn?'#3dd68c':'var(--muted2)'};padding-left:2px">${estado}${r.pagadoEn?` · <span style="cursor:pointer;text-decoration:underline" onclick="deshacerPagoDeuda(${r.id})">deshacer</span>`:''}</div>
+      <div style="font-size:9px;color:${r.pagadoEn?'#3dd68c':'var(--muted2)'};padding-left:2px;display:flex;align-items:center;gap:3px;flex-wrap:wrap">${estado}${r.pagadoEn?` · <span style="cursor:pointer;text-decoration:underline" onclick="deshacerPagoDeuda(${r.id})">deshacer</span>`:''}</div>
     </div>`;
   }).join(''):'<p style="font-size:11px;color:var(--muted2)">Aún no has registrado deudas. Usa + Añadir deuda.</p>';
   recalc();
@@ -1041,9 +1054,14 @@ function recalc(){
 
 function getAcumAho(){
   let acc=0;
-  for(let m=0;m<curM;m++){
-    const s=loadSaved(m,curY);
+  // recorrer hacia atrás mes a mes, cruzando años, mientras exista data guardada
+  let m=curM, y=curY;
+  while(true){
+    const pv=prevMonthYear(m,y);
+    if(!hasMonthData(pv.m,pv.y)) break;
+    const s=loadSaved(pv.m,pv.y);
     if(s) acc+=s.aho-(s.retiro||0);
+    m=pv.m; y=pv.y;
   }
   // current live month (misma fórmula que recalc, sin contar el arrastre del mes anterior)
   const ingBase=sumCat('ing'),vari=sumCat('var');
@@ -1419,20 +1437,33 @@ async function drivePull({silent=false,force=false}={}){
   if(!_gFileId) await driveLocateFile();
   if(!_gFileId) return 'empty';
   if(!force){
+    let warn=false;
+    // 1) ¿Hay ediciones en esta sesión (deudas o gastos fijos) que aún no pasaron por "Guardar"?
+    //    deudaRows/fijoRows viven en memoria y solo se escriben a localStorage al Guardar, así que
+    //    una edición reciente (p.ej. cambiar una prioridad) puede no estar reflejada todavía ahí.
     try{
-      const mr=await driveApi(`https://www.googleapis.com/drive/v3/files/${_gFileId}?fields=modifiedTime`);
-      const mj=await mr.json();
-      if(mj.modifiedTime) _gFileModifiedTime=mj.modifiedTime;
-      const localIso=localStorage.getItem('fin4_lastsave');
-      if(localIso && _gFileModifiedTime){
-        const localTime=new Date(localIso).getTime();
-        const driveTime=new Date(_gFileModifiedTime).getTime();
-        if(localTime>driveTime+5000){ // margen de 5s por desfases de reloj
-          const ok=confirm('Tienes cambios guardados en este equipo más recientes que tu copia en Drive (puede que el último "Guardar" no haya llegado a subirse). Si actualizas ahora, esos cambios locales se perderán y se reemplazarán por la copia de Drive.\n\n¿Seguro que quieres continuar?');
-          if(!ok) return 'cancel';
+      if(JSON.stringify(deudaRows)!==(localStorage.getItem('fin4_deudas')||'[]')) warn=true;
+      if(!warn && JSON.stringify(getFijoData())!==(localStorage.getItem(skey('fij',curM,curY))||'[]')) warn=true;
+    }catch(e){}
+    // 2) Si no hay ediciones sueltas detectadas, revisa si el último Guardar local es más
+    //    reciente que la copia en Drive (p.ej. el Guardar no llegó a subirse por algún error).
+    if(!warn){
+      try{
+        const mr=await driveApi(`https://www.googleapis.com/drive/v3/files/${_gFileId}?fields=modifiedTime`);
+        const mj=await mr.json();
+        if(mj.modifiedTime) _gFileModifiedTime=mj.modifiedTime;
+        const localIso=localStorage.getItem('fin4_lastsave');
+        if(localIso && _gFileModifiedTime){
+          const localTime=new Date(localIso).getTime();
+          const driveTime=new Date(_gFileModifiedTime).getTime();
+          if(localTime>driveTime+5000) warn=true; // margen de 5s por desfases de reloj
         }
-      }
-    }catch(e){ /* si la verificación falla, seguir igual que antes */ }
+      }catch(e){ /* si la verificación falla, seguir igual que antes */ }
+    }
+    if(warn){
+      const ok=confirm('Tienes cambios en esta sesión que aún no guardaste con el botón "Guardar" (o que no llegaron a subirse a tu Drive). Si actualizas ahora, esos cambios se perderán y se reemplazarán por la copia de Drive.\n\n¿Seguro que quieres continuar?');
+      if(!ok) return 'cancel';
+    }
   }
   const r=await driveApi(`https://www.googleapis.com/drive/v3/files/${_gFileId}?alt=media`);
   const data=await r.json();
@@ -1618,6 +1649,15 @@ function showTab(name,el){
   el.classList.add('on');
 }
 
+function cambiarMes(delta){
+  let m=curM+delta, y=parseInt(curY);
+  if(m>11){ m=0; y++; } else if(m<0){ m=11; y--; }
+  curM=m; curY=String(y);
+  $('selMes').value=curM;
+  $('selAno').value=curY;
+  loadMonth(curM,curY);
+  recalc();
+}
 $('selMes').addEventListener('change',function(){curM=parseInt(this.value);loadMonth(curM,curY);recalc();});
 $('selAno').addEventListener('change',function(){curY=this.value;loadMonth(curM,curY);recalc();});
 
