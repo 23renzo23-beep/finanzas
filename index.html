@@ -1153,6 +1153,17 @@ function buildDonut(canvasId,legendId,vals){
   if(leg) leg.innerHTML=LBS_D.map((l,i)=>`<div class="lr"><div class="ld" style="background:${HX_D[i]}"></div><span class="ln">${l}</span><span class="lv">${fmts(vals[i])}</span><span class="lp">${pcts(vals[i],total)}</span></div>`).join('');
 }
 
+// Formato adaptativo para el eje Y de los gráficos: usa "k" solo cuando los valores son
+// grandes (>=1000); para montos chicos muestra el número real (con decimales si hace falta),
+// para que un ahorro de S/0.75 no se vea como "S/0k".
+function axisFmt(v){
+  const a=Math.abs(v);
+  if(a>=1000) return 'S/'+(v/1000).toFixed(a>=10000?0:1).replace(/\.0$/,'')+'k';
+  if(a>=10) return 'S/'+Math.round(v);
+  if(a===0) return 'S/0';
+  return 'S/'+v.toFixed(2).replace(/\.?0+$/,'');
+}
+
 function buildBar(ing,gas,pres){
   const ctx=$('cBar').getContext('2d');
   if(_cBar){_cBar.destroy();}
@@ -1165,7 +1176,7 @@ function buildBar(ing,gas,pres){
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{labels:{color:'#8a8baa',font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:c=>' '+fmts(c.raw)}}},
       scales:{x:{ticks:{color:'#4e4f72',font:{size:9}},grid:{color:'#1a1b2e'}},
-              y:{ticks:{color:'#4e4f72',font:{size:9},callback:v=>'S/'+Math.round(v/1000)+'k'},grid:{color:'#1e1f35'}}}}});
+              y:{ticks:{color:'#4e4f72',font:{size:9},callback:axisFmt},grid:{color:'#1e1f35'}}}}});
 }
 
 function buildAho(aho){
@@ -1176,7 +1187,7 @@ function buildAho(aho){
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmts(c.raw)}}},
       scales:{x:{ticks:{color:'#4e4f72',font:{size:9}},grid:{color:'#1a1b2e'}},
-              y:{ticks:{color:'#4e4f72',font:{size:9},callback:v=>'S/'+Math.round(v/1000)+'k'},grid:{color:'#1e1f35'}}}}});
+              y:{ticks:{color:'#4e4f72',font:{size:9},callback:axisFmt},grid:{color:'#1e1f35'}}}}});
 }
 
 function buildMetas(totalReal){
