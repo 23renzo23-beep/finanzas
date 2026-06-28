@@ -1052,11 +1052,13 @@ function recalc(){
   $('k-acum').textContent=fmts(totalReal);
   buildMetas(totalReal);
 
-  // Gastos fijos (dashboard con prioridad/cascada): se pagan primero, con todo el ingreso del mes como bolsa
-  buildFijosDash(ingTotal);
+  // Gastos fijos (dashboard con prioridad/cascada): se pagan primero, con el ingreso total
+  // como bolsa, restando lo que ya hayas pagado de fijos este mismo mes (ese dinero ya salió)
+  buildFijosDash(ingTotal-fijPag);
 
-  // Deudas (dashboard con prioridad/cascada): la bolsa es lo que queda tras fijos pagados y variables
-  buildDeudasDash(ingTotal-fijPag-vari);
+  // Deudas (dashboard con prioridad/cascada): la bolsa es lo que queda tras fijos pagados,
+  // variables, Y las deudas que ya pagaste este mismo mes (ese dinero ya salió, no está libre)
+  buildDeudasDash(ingTotal-fijPag-vari-deu);
 
   // Me deben dashboard
   renderMeDebenDash();
