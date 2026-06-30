@@ -1054,11 +1054,16 @@ function recalc(){
 
   // Gastos fijos (dashboard con prioridad/cascada): se pagan primero, con el ingreso total
   // como bolsa, restando lo que ya hayas pagado de fijos este mismo mes (ese dinero ya salió)
-  buildFijosDash(ingTotal-fijPag);
+  // Gastos fijos y Deudas muestran la MISMA bolsa: lo que queda hoy tras descontar todo lo
+  // ya pagado este mes (fijos pagados + variables + deudas pagadas). Así ambas tarjetas
+  // reflejan el disponible real actual, sin confundir con prioridades de cascada distintas.
+  const poolPago=ingTotal-fijPag-vari-deu;
+  buildFijosDash(poolPago);
 
   // Deudas (dashboard con prioridad/cascada): la bolsa es lo que queda tras fijos pagados,
   // variables, Y las deudas que ya pagaste este mismo mes (ese dinero ya salió, no está libre)
-  buildDeudasDash(ingTotal-fijPag-vari-deu);
+  // Deudas: misma bolsa que Gastos fijos (ver poolPago arriba)
+  buildDeudasDash(poolPago);
 
   // Me deben dashboard
   renderMeDebenDash();
